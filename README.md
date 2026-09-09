@@ -39,11 +39,6 @@ in its chezmoi template. Homebrew supplies the Mac applications declared in
 These are personal configurations, intentionally tied to `dp`, `z`, and a checkout
 at `~/nix-config`.
 
-The local Browser Use path is an explicit exception to the fast-moving mise
-tool set: Home Manager owns `uv`, `browser-use-mcp`, and `helium-cdp`; chezmoi
-reconciles the local stdio integration into Executor. See
-[the Browser Use MCP guide](docs/browser-use-mcp.md).
-
 For writable dotfiles, Home Manager owns the symlink and the application/user edits
 the repository-backed contents. Those files, like the live chezmoi tree, **do not
 roll back with Nix**. Immutable dotfiles do. Credentials and runtime state remain
