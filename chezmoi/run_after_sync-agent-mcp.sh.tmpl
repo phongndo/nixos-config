@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Reconcile after native configs, which may replace an agent's MCP section.
+# Both hosts use credential-free stdio entries; model/provider settings stay intact.
+set -euo pipefail
+exec python3 "$HOME/.local/bin/sync-agent-mcp"

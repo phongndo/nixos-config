@@ -1,13 +1,16 @@
 {
   "source": "code/pi-extensions",
   "targets": {
-    "claude": {"path": ".claude/skills", "adapter": "standard"},
     "codex": {"path": ".codex/skills", "adapter": "codex"},
-    "cursor": {"path": ".cursor/skills", "adapter": "standard"},
-    "copilot": {"path": ".copilot/skills", "adapter": "standard"},
     "opencode": {"path": ".config/opencode/skills", "adapter": "explicit-guard"},
-    "grok": {"path": ".grok/skills", "adapter": "standard"},
     "dsh": {"path": ".dsh/skills", "adapter": "standard"}
   },
-  "legacy_cleanup": [".pi/agent/skills", ".agents/skills"]
+  "legacy_cleanup": [
+    ".pi/agent/skills",
+    ".agents/skills",
+    ".claude/skills",
+    ".cursor/skills",
+    ".copilot/skills",
+    ".grok/skills"
+  ]
 }

@@ -37,3 +37,19 @@ herdr-tui-session.js
 .cli-proxy-api/config.json
 .cli-proxy-api/config.lock
 .cli-proxy-api/logs/**
+
+# Only Linux needs the SSH bridge. Both hosts configure the same four agents.
+{{ if ne .chezmoi.os "linux" }}
+.local/bin/executor-mcp
+.ssh/executor_mac_known_hosts
+{{ end }}
+
+# The bridge key is provisioned directly on box, never committed or synced.
+.ssh/id_ed25519_executor_mac
+.ssh/id_ed25519_executor_mac.pub
+
+# DSH owns runtime profiles, model settings, and provider credentials.
+# Only the non-secret, shared cordis.patch.yml is managed here.
+.dsh/.credentials.yaml
+.dsh/settings.yaml
+.dsh/profiles/**

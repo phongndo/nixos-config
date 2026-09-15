@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Reconcile MCP entries for Pi, Codex, and OpenCode on macOS and Linux.
+
+DSH's MCP plugin is managed directly by chezmoi. These are the only four
+supported agents; do not create configuration for uninstalled agents.
+
+Called after chezmoi applies native configs (notably Codex and OpenCode).
+Only Executor is replaced. Credentials stay on the Mac; this tree contains
+only local stdio commands (direct on Mac, restricted SSH on Linux).
+Python 3.11+ is required.
+"""
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import tempfile
+import tomllib
+
+
+def json_config(text, entry, key="mcpServers"):
+    # The chezmoi-managed OpenCode .jsonc is deliberately plain JSON too.
+    data = json.loads(text) if text.strip() else {}
+    data.setdefault(key, {})["executor"] = entry
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+def toml_config(text, entry):
+    before = tomllib.loads(text)
+    expected = dict(before)
+    expected["mcp_servers"] = {**before.get("mcp_servers", {}), "executor": entry}
+    # Preserve all unrelated text, including comments and other servers.
+    # Validation below refuses unusual table spellings/multiline TOML rather
+    # than silently changing settings outside mcp_servers.executor.
+    sections = re.split(r"(?m)(?=^[ \t]*\[)", text)
+    executor_table = re.compile(
+        r"^[ \t]*\[\s*mcp_servers\.(?:executor|\"executor\"|'executor')(?:\s*\]|\.)"
+    )
+    kept = "".join(s for s in sections if not executor_table.match(s)).rstrip()
+    block = "\n\n[mcp_servers.executor]\n" + "".join(
+        f"{key} = {json.dumps(value, ensure_ascii=False)}\n"
+        for key, value in entry.items()
+    )
+    result = kept + block
+    if tomllib.loads(result) != expected:
+        raise ValueError("cannot safely replace mcp_servers.executor; no files changed")
+    return result
+
+
+def plan(home, platform="linux"):
+    if platform == "darwin":
+        stdio = {
+            "command": "/Applications/Executor.app/Contents/Resources/executor/executor",
+            "args": ["mcp", "--no-artifacts", "--search-tools", "--elicitation-mode", "browser"],
+        }
+    elif platform == "linux":
+        stdio = {"command": str(home / ".local/bin/executor-mcp"), "args": []}
+    else:
+        raise ValueError(f"unsupported platform: {platform}")
+    changes = {}
+
+    def patch(relative, transform):
+        path = home / relative
+        if path.is_symlink():
+            raise ValueError(f"refusing to replace symlink: {path}")
+        old = path.read_text() if path.exists() else ""
+        try:
+            new = transform(old)
+        except (ValueError, TypeError, AttributeError) as error:
+            raise ValueError(f"{path}: {error}") from error
+        if new != old:
+            changes[path] = (old, new)
+
+    patch(".config/mcp/mcp.json", lambda old: json_config(old, stdio))  # Pi.
+    patch(".codex/config.toml", lambda old: toml_config(old, {**stdio, "startup_timeout_sec": 30}))
+    patch(".config/opencode/opencode.jsonc", lambda old: json_config(old, {
+        "type": "local", "command": [stdio["command"], *stdio["args"]], "enabled": True, "timeout": 30000,
+    }, "mcp"))
+    # Pi enables shared entries by default. Do not reset its mutable /mcp
+    # overlay: disabling Executor in Pi must survive a chezmoi apply.
+    return changes
+
+
+def atomic_write(path, content):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as output:
+            output.write(content)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def apply(home, platform="linux"):
+    changes = plan(home, platform)  # Validate every existing file before writing any.
+    backup_root = home / ".local/state/executor-agent-config/backups"
+    if changes:
+        backup_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    for path, (old, new) in changes.items():
+        backup = backup_root / path.relative_to(home)
+        if path.exists() and not backup.exists():
+            atomic_write(backup, old)
+        atomic_write(path, new)
+        print(f"sync-agent-mcp: updated {path}")
+    return len(changes)
+
+
+if __name__ == "__main__":
+    try:
+        apply(Path.home(), sys.platform)
+    except (OSError, ValueError) as error:
+        print(f"sync-agent-mcp: {error}", file=sys.stderr)
+        sys.exit(1)

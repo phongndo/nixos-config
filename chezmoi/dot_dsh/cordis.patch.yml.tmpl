@@ -1,0 +1,14 @@
+# Shared by all DSH profiles, after their profile-specific patch layers.
+- insert:
+    - id: mcp-executor
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: executor
+        transport: stdio
+{{ if eq .chezmoi.os "darwin" }}
+        command: /Applications/Executor.app/Contents/Resources/executor/executor
+        args: [mcp, --no-artifacts, --search-tools, --elicitation-mode, browser]
+{{ else }}
+        command: {{ printf "%s/.local/bin/executor-mcp" .chezmoi.homeDir | quote }}
+        args: []
+{{ end }}

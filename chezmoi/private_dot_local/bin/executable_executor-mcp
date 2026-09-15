@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Linux agents use the Mac's single Executor instance over MCP stdio/SSH.
+# The dedicated key is restricted on the Mac to `executor mcp`; no shell,
+# forwarding, or API credentials are required on this machine.
+set -euo pipefail
+exec /run/current-system/sw/bin/ssh \
+  -F /dev/null -T \
+  -o BatchMode=yes \
+  -o IdentitiesOnly=yes \
+  -o StrictHostKeyChecking=yes \
+  -o "UserKnownHostsFile=$HOME/.ssh/executor_mac_known_hosts" \
+  -o GlobalKnownHostsFile=/dev/null \
+  -o ConnectTimeout=10 \
+  -o ServerAliveInterval=15 \
+  -o ServerAliveCountMax=3 \
+  -o ClearAllForwardings=yes \
+  -i "$HOME/.ssh/id_ed25519_executor_mac" \
+  dp@100.90.20.37 executor-mcp
