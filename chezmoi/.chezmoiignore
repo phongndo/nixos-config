@@ -27,3 +27,13 @@ trust.json
 web-telemetry.jsonl
 herdr-agent-state.*
 herdr-tui-session.js
+
+# Only the non-secret CLIProxyAPI template is managed; OAuth and the generated
+# client/management keys and generated config are per-machine runtime state.
+.cli-proxy-api/auth/**
+.cli-proxy-api/client-key
+.cli-proxy-api/management-key
+.cli-proxy-api/static/**
+.cli-proxy-api/config.json
+.cli-proxy-api/config.lock
+.cli-proxy-api/logs/**

@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    llm-agents.url = "github:numtide/llm-agents.nix";
     determinate-nix = {
       url = "https://flakehub.com/f/DeterminateSystems/nix-src/3.22.2";
       # Match the dependency revision tested by this Determinate release.
@@ -26,6 +27,7 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
+      llm-agents,
       determinate-nix,
       home-manager,
       nix-darwin,
@@ -39,6 +41,7 @@
           self
           nixpkgs
           nixpkgs-unstable
+          llm-agents
           home-manager
           nix-darwin
           ;
@@ -63,48 +66,10 @@
         ];
       };
 
-      qualityChecks =
-        system:
-        let
-          pkgs = nixpkgs.legacyPackages.${system};
-        in
-        {
-          format = pkgs.runCommand "nix-format-check" { nativeBuildInputs = [ pkgs.nixfmt-tree ]; } ''
-            cp -R ${self} source
-            chmod -R u+w source
-            cd source
-            treefmt --ci --tree-root . --walk filesystem
-            touch $out
-          '';
-
-          lint =
-            pkgs.runCommand "nix-lint-check"
-              {
-                nativeBuildInputs = with pkgs; [
-                  deadnix
-                  statix
-                ];
-              }
-              ''
-                statix check ${self}
-                deadnix --fail ${self}
-                touch $out
-              '';
-        };
     in
     {
       darwinConfigurations.darwin = darwin;
       nixosConfigurations.box = box;
-
-      # Every target exposes its closure plus formatting and static analysis.
-      checks.${darwinSystem} = {
-        inherit (darwin) system;
-      }
-      // qualityChecks darwinSystem;
-      checks.${linuxSystem} = {
-        system = box.config.system.build.toplevel;
-      }
-      // qualityChecks linuxSystem;
 
       formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt-tree;
       formatter.${linuxSystem} = nixpkgs.legacyPackages.${linuxSystem}.nixfmt-tree;

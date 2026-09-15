@@ -1,0 +1,43 @@
+{
+  "providers": {
+    "local-codex": {
+      "baseUrl": "http://127.0.0.1:8317/v1",
+      "api": "openai-responses",
+      "apiKey": "!cat \"$HOME/.cli-proxy-api/client-key\"",
+      "compat": {
+        "sessionAffinityFormat": "openai"
+      },
+      "models": [
+        {
+          "id": "gpt-6-astra",
+          "name": "GPT-6 Astra (Local Codex)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 272000,
+          "maxTokens": 128000,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        {
+          "id": "gpt-5.4",
+          "name": "GPT-5.4 (Local Codex)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 272000,
+          "maxTokens": 128000,
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "xhigh": "xhigh"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -3,6 +3,8 @@ _:
 {
   users.users.z = {
     isNormalUser = true;
+    # Start user services at boot and keep the local proxy alive after SSH logout.
+    linger = true;
     description = "phony";
     extraGroups = [
       "networkmanager"

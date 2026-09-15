@@ -43,7 +43,6 @@ in
 
     configFile = lib.mkMerge [
       {
-        "atuin/TERMINAL.md" = immutable ../atuin/TERMINAL.md;
         "nvim/init.lua" = immutable ../nvim/init.lua;
         "starship.toml" = immutable ../starship/starship.toml;
 
