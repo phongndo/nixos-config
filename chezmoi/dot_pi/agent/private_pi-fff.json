@@ -1,3 +1,4 @@
 {
-  "mode": "override"
+  "mode": "override",
+  "enableHomeDirScanning": false
 }
