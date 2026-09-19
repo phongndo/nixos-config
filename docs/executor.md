@@ -100,12 +100,6 @@ Original runtime configs changed by the reconciler are backed up once under
 paths. Configs and backup files are atomically written with mode 0600. No
 credentials are included in the chezmoi source.
 
-Tests (no network access or real credentials):
-
-```sh
-python3 -B -m unittest discover -s tests -v
-```
-
 Live verification passed on **both Mac and Linux**:
 
 - Codex's native app-server `mcpServerStatus/list` discovered all eight tools.
@@ -117,6 +111,6 @@ Live verification passed on **both Mac and Linux**:
   plugin was supplied only to the test process, not installed in the profile.
 
 The eight tools are `execute`, `skills`, `resume`, and the five search loaders
-for Chrome DevTools, Chrome, Computer Use, Fastmail, and Firecrawl. Tests did
-not run a model request or change model-provider credentials. Existing agent
+for Chrome DevTools, Chrome, Computer Use, Fastmail, and Firecrawl. These checks
+did not run a model request or change model-provider credentials. Existing agent
 sessions need to restart or reload to adopt new configuration.

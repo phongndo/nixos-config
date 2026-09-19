@@ -27,32 +27,39 @@ with the managed Node runtime. Linux also installs `pnpm`, required by the
 initialized, and the Executor MCP plugin is in the shared
 `~/.dsh/cordis.patch.yml` overlay.
 
-No provider credentials or Mac model/permission settings were copied. Configure
-a working provider in the web UI before asking DSH to run model tasks. Until
-then, the application can launch, but a model task is not expected to succeed.
-The Mac's `danger-full-access` setting was deliberately not copied.
+The **Local Codex pool** provider (`codex-local`) now connects to the existing
+Linux CLIProxyAPI using its private client key. It is the managed web service's
+only active model provider: DeepSeek is disabled by its Nix overlay, and OpenCode
+Go was removed from settings. New chats default to `gpt-6-astra` with `xhigh`
+reasoning. In an existing conversation, the control near Send offers **Model**
+and **Effort**; all five Codex models expose their supported concrete levels,
+without the ambiguous **Default** effort option. Provider persistence, discovery,
+and the UI model catalog were verified; inference was not tested. No Mac
+model/permission settings or Codex OAuth accounts were copied, and the Mac's
+`danger-full-access` setting remains unused.
 
-Start the web UI on the box:
+The box now runs a boot-enabled `deepseek-harness.service` user service on
+`127.0.0.1:8787`. It pins the tested DSH and Node installations independently
+of the interactive mise `latest` selections. Do not start another process on
+that port. Manage it with:
 
 ```sh
-dsh web --no-open --port 8787
+systemctl --user is-active deepseek-harness
+systemctl --user restart deepseek-harness
 ```
 
-To use the box's web UI from the Mac, run this in a Mac terminal and keep it
-open:
+Private phone/Mac access is enabled through Tailscale Serve on HTTPS port 8443.
+A Nix-managed compatibility override enables this release's Models settings at
+the exact trusted HTTPS origin; the original client otherwise disables settings
+on non-loopback addresses. See [Durable Harness setup](deepseek-harness-remote.md).
 
-```sh
-ssh -t -o ExitOnForwardFailure=yes -L 8787:127.0.0.1:8787 box \
-  'mise exec -- dsh web --no-open --port 8787'
-```
+For a new browser or expired login, run `dsh-web-login` privately on the box and
+open its link on that device. After signing in, bookmark the clean HTTPS address.
+The startup link contains a temporary credential: do not share or commit it.
+Browser cookies persist across server restarts using the signing record in
+`~/.dsh/.credentials.yaml` and default to a 30-day lifetime.
 
-Open the full `http://127.0.0.1:8787/?...` startup URL printed by DSH. Its token
-is a temporary UI credential: do not share it or commit it. The application
-stays loopback-only; no firewall change or public bind is needed. Ctrl-C stops
-the UI and tunnel. If port 8787 is occupied locally, choose another free port
-consistently in all three places in that command.
-
-After configuring a provider, one-shot terminal tasks use:
+After choosing a default model, one-shot terminal tasks use:
 
 ```sh
 dsh --profile headless "your task"

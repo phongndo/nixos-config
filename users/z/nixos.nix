@@ -3,7 +3,7 @@ _:
 {
   users.users.z = {
     isNormalUser = true;
-    # Start user services at boot and keep the local proxy alive after SSH logout.
+    # Start the proxy and Harness at boot, independent of interactive logins.
     linger = true;
     description = "phony";
     extraGroups = [

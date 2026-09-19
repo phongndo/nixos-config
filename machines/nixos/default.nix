@@ -103,6 +103,7 @@
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
     22
     443
+    8443 # DeepSeek Harness; its backend remains on loopback.
   ];
 
   # Personal file storage is independent of the Immich deployment.
