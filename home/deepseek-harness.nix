@@ -7,11 +7,12 @@
 
 let
   home = config.home.homeDirectory;
-  # The service uses existing mise installations, but never resolves "latest" or
-  # installs packages at boot. Update these versions only after a restart test.
+  # Share exact versions with chezmoi's Linux mise config. Activation installs
+  # these before starting the service; boot never resolves or installs "latest".
+  runtime = (builtins.fromTOML (builtins.readFile ../chezmoi/.chezmoidata.toml)).harnessRuntime;
   installs = "${home}/.local/share/mise/installs";
-  node = "${installs}/node/26.8.1/bin/node";
-  dsh = "${installs}/npm-deepseek-ai-dsh/0.1.5-rc.1/lib/node_modules/@deepseek-ai/dsh/lib/bin.js";
+  node = "${installs}/node/${runtime.node}/bin/node";
+  dsh = "${installs}/npm-deepseek-ai-dsh/${runtime.dsh}/lib/node_modules/@deepseek-ai/dsh/lib/bin.js";
   authority = "z.tail5606b4.ts.net:8443";
   remoteSettings = import ../lib/dsh-remote-settings.nix {
     inherit pkgs;
@@ -60,7 +61,7 @@ in
             "HOME=${home}"
             "DSH_HOME=${home}/.dsh"
             "DSH_TELEMETRY_MODE=DISABLED"
-            "PATH=${installs}/node/26.8.1/bin:${installs}/pnpm/12.4.1:${home}/.local/bin:/etc/profiles/per-user/${config.home.username}/bin:${home}/.nix-profile/bin:/run/current-system/sw/bin"
+            "PATH=${installs}/node/${runtime.node}/bin:${installs}/pnpm/${runtime.pnpm}:${home}/.local/bin:/etc/profiles/per-user/${config.home.username}/bin:${home}/.nix-profile/bin:/run/current-system/sw/bin"
           ];
           Restart = "on-failure";
           RestartSec = 10;

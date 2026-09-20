@@ -1,0 +1,6 @@
+# Linux's long-running Harness service and mise must use the same exact versions.
+# home/deepseek-harness.nix reads this table too. Update only after a restart test.
+[harnessRuntime]
+node = "26.9.0"
+dsh = "0.1.5-rc.2"
+pnpm = "12.5.1"

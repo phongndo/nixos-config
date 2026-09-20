@@ -10,12 +10,16 @@ codex = "latest"
 python = "3.14"
 opencode = "latest"
 pi = "latest"
-node = "26"
-"npm:@deepseek-ai/dsh" = "latest"
 {{ if eq .chezmoi.os "linux" -}}
+# Shared with home/deepseek-harness.nix: upgrades must not remove its runtime.
+node = "{{ .harnessRuntime.node }}"
+"npm:@deepseek-ai/dsh" = "{{ .harnessRuntime.dsh }}"
 # Required by `dsh plugin` to manage profile dependencies.
-pnpm = "latest"
+pnpm = "{{ .harnessRuntime.pnpm }}"
 # macOS uses the Homebrew installation.
 "npm:executor" = "latest"
+{{ else -}}
+node = "26"
+"npm:@deepseek-ai/dsh" = "latest"
 {{ end -}}
 herdr = "latest"

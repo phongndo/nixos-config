@@ -1,0 +1,10 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* This file is plain JSON, also read by sync-agent-mcp. Preserve its MCP
+      entries and local settings instead of resetting to an empty config. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := mustMergeOverwrite (deepCopy $current) (dict "$schema" "https://opencode.ai/config.json") -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

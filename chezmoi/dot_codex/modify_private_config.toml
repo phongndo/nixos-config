@@ -1,0 +1,12 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Codex owns local trust/runtime state; sync-agent-mcp owns Executor.
+      Merge shared settings instead of replacing either writer's additions.
+      Keep the original text when unchanged to avoid formatting churn. */ -}}
+{{- $current := .chezmoi.stdin | fromToml -}}
+{{- $shared := includeTemplate "codex-config.toml.tmpl" . | fromToml -}}
+{{- $merged := mustMergeOverwrite (deepCopy $current) $shared -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toToml }}
+{{- end -}}
