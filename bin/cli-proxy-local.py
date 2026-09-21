@@ -119,12 +119,20 @@ def check(root):
 def main():
     os.umask(0o077)
     executable, *arguments = sys.argv[1:]
-    if not arguments or arguments[0] not in {'init', 'login', 'serve', 'check'}:
-        raise ValueError('Usage: cli-proxy-local {init|login [--no-browser]|serve|check}')
+    if not arguments or arguments[0] not in {'init', 'login', 'serve', 'check', 'bank-resets'}:
+        raise ValueError('Usage: cli-proxy-local {init|login [--no-browser]|serve|check|bank-resets {status|run|serve}}')
     command, *extra = arguments
+    root = Path.home() / '.cli-proxy-api'
+    if command == 'bank-resets':
+        if len(extra) != 1 or extra[0] not in {'status', 'run', 'serve'}:
+            raise ValueError('Usage: cli-proxy-local bank-resets {status|run|serve}')
+        import cli_proxy_resets
+        key = read_key(root / 'management-key')
+        if extra[0] != 'status':
+            private_directory(root / 'logs')
+        sys.exit(cli_proxy_resets.main(root, extra[0], key))
     if extra and not (command == 'login' and extra == ['--no-browser']):
         raise ValueError('Only login accepts the optional --no-browser flag')
-    root = Path.home() / '.cli-proxy-api'
     if command == 'check':
         check(root)
         return

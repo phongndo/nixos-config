@@ -8,7 +8,7 @@
 
 let
   localProxy = pkgs.writeShellScriptBin "cli-proxy-local" ''
-    exec ${pkgs.python3}/bin/python3 ${../bin/cli-proxy-local.py} \
+    exec ${pkgs.python3}/bin/python3 -B ${../bin}/cli-proxy-local.py \
       ${cliProxyPackage}/bin/cli-proxy-api "$@"
   '';
 in
@@ -36,6 +36,25 @@ in
     };
   };
 
+  # A companion worker, not an inference hook: the proxy remains on localhost
+  # on each machine, with no cross-machine hop added to model requests.
+  launchd.agents.cli-proxy-bank-resets = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+    enable = true;
+    config = {
+      Label = "com.dp.cli-proxy-bank-resets";
+      ProgramArguments = [
+        "${localProxy}/bin/cli-proxy-local"
+        "bank-resets"
+        "serve"
+      ];
+      EnvironmentVariables.HOME = config.home.homeDirectory;
+      RunAtLoad = true;
+      KeepAlive.SuccessfulExit = false;
+      ThrottleInterval = 30;
+      ProcessType = "Background";
+    };
+  };
+
   systemd.user = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     startServices = "sd-switch";
     services.cli-proxy-api = {
@@ -47,6 +66,23 @@ in
       };
       Service = {
         ExecStart = "${localProxy}/bin/cli-proxy-local serve";
+        Environment = "HOME=${config.home.homeDirectory}";
+        Restart = "on-failure";
+        RestartSec = 30;
+        UMask = "0077";
+        NoNewPrivileges = true;
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
+    services.cli-proxy-bank-resets = {
+      Unit = {
+        Description = "Redeem Codex banked resets five minutes before expiry";
+        After = [ "cli-proxy-api.service" ];
+        Wants = [ "cli-proxy-api.service" ];
+        StartLimitIntervalSec = 0;
+      };
+      Service = {
+        ExecStart = "${localProxy}/bin/cli-proxy-local bank-resets serve";
         Environment = "HOME=${config.home.homeDirectory}";
         Restart = "on-failure";
         RestartSec = 30;

@@ -36,6 +36,7 @@ herdr-tui-session.js
 .cli-proxy-api/static/**
 .cli-proxy-api/config.json
 .cli-proxy-api/config.lock
+.cli-proxy-api/bank-resets.lock
 .cli-proxy-api/logs/**
 
 # Only Linux needs the SSH bridge. Both hosts configure the same four agents.
