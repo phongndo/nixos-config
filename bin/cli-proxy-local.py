@@ -19,7 +19,7 @@ def private_directory(path):
     path.chmod(0o700)
 
 
-def read_key(path):
+def read_key(path, *, allow_password=False):
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
     with os.fdopen(fd) as stream:
         info = os.fstat(stream.fileno())
@@ -27,19 +27,22 @@ def read_key(path):
             raise ValueError('Key must be an owned regular file')
         if stat.S_IMODE(info.st_mode) != 0o600:
             raise ValueError('Key must have mode 0600')
-        key = stream.read(66).strip()
-    if not re.fullmatch('[0-9a-f]{64}', key):
+        key = stream.read(74).strip()
+    # Management supports user-chosen passwords within bcrypt's byte limit.
+    valid = (bool(key) and key.isprintable() and len(key.encode()) <= 72
+             if allow_password else re.fullmatch('[0-9a-f]{64}', key))
+    if not valid:
         raise ValueError('Invalid key; refusing to rotate it automatically')
     return key
 
 
-def ensure_key(path):
+def ensure_key(path, *, allow_password=False):
     # Called under the configuration lock; keys are never printed or put in argv.
     if not path.exists() and not path.is_symlink():
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'w') as key_file:
             key_file.write(secrets.token_hex(32) + '\n')
-    return read_key(path)
+    return read_key(path, allow_password=allow_password)
 
 
 def initialize(root):
@@ -55,14 +58,14 @@ def initialize(root):
             raise ValueError('Invalid local port')
         management = config.get('remote-management', {})
         if management.get('secret-key') or management.get('allow-remote') is not False:
-            raise ValueError('Management must be local-only with a runtime-generated key')
+            raise ValueError('Management must be local-only with a private runtime key')
         if type(management.get('disable-control-panel')) is not bool:
             raise ValueError('Explicit control-panel setting required')
         if config.get('ws-auth') is not True:
             raise ValueError('WebSocket authentication must remain enabled')
         config['api-keys'] = [ensure_key(root / 'client-key')]
         if management['disable-control-panel'] is False:
-            management['secret-key'] = ensure_key(root / 'management-key')
+            management['secret-key'] = ensure_key(root / 'management-key', allow_password=True)
         config['auth-dir'] = str(root / 'auth')
         target = root / 'config.json'
         if target.is_symlink():
