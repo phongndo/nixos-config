@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  unstablePkgs,
   ...
 }:
 
@@ -37,6 +38,7 @@
       zellij
       zoxide
     ])
+    ++ [ unstablePkgs.llama-cpp ]
     # Linux-only packages; macOS gets 1Password CLI through Homebrew.
     ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux (
       with pkgs;
