@@ -19,7 +19,7 @@
   };
 
   networking = {
-    hostName = "box";
+    hostName = "z";
     networkmanager = {
       enable = true;
       wifi.powersave = false;
@@ -67,6 +67,12 @@
 
   programs.nix-ld.enable = true;
 
+  # Pin y's host key so unattended SSH never needs a trust-on-first-use prompt.
+  programs.ssh.knownHosts.y = {
+    extraHostNames = [ "100.90.20.37" ];
+    publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPChw4RsEFgDyt/Wc9GVoLw4nztnx7us5pWwUg5EFYXu";
+  };
+
   services = {
     xserver.xkb = {
       layout = "us";
@@ -107,7 +113,7 @@
   ];
 
   # Personal file storage is independent of the Immich deployment.
-  systemd.tmpfiles.rules = [ "d /srv/data/files 0750 z users -" ];
+  systemd.tmpfiles.rules = [ "d /srv/data/files 0750 dp users -" ];
 
   # Preserve the version from the machine's original installation.
   system.stateVersion = "26.05";

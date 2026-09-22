@@ -1,8 +1,10 @@
 _:
 
 {
-  users.users.z = {
+  users.users.dp = {
     isNormalUser = true;
+    # Preserve ownership of the existing Linux home and data after renaming z.
+    uid = 1000;
     # Start the proxy and Harness at boot, independent of interactive logins.
     linger = true;
     description = "phony";

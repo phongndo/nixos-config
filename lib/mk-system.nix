@@ -51,7 +51,7 @@ systemBuilder {
         extraSpecialArgs = {
           configurationName = name;
           cliProxyPackage = llm-agents.packages.${system}.cli-proxy-api;
-          inherit rebuildCommand unstablePkgs;
+          inherit isDarwin rebuildCommand unstablePkgs;
         };
         users.${user} = import userHomeConfig;
       };

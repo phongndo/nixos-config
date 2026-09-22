@@ -47,18 +47,16 @@ in
         UseKeychain = "yes";
       };
 
-      box = {
+      z = {
         HostName = "100.122.138.125";
-        User = "z";
+        User = "dp";
         IdentityFile = "~/.ssh/id_ed25519";
         IdentitiesOnly = true;
+        AddKeysToAgent = "yes";
+        UseKeychain = "yes";
       };
     };
   };
-
-  # The tailnet address is routing metadata, not a credential; SSH still
-  # requires the private key that remains outside this repository.
-  home.shellAliases.box = "ssh box";
 
   programs.browserpass = {
     enable = true;

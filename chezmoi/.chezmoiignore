@@ -44,9 +44,11 @@ herdr-tui-session.js
 .ssh/executor_mac_known_hosts
 {{ end }}
 
-# The bridge key is provisioned directly on box, never committed or synced.
+# Machine keys are provisioned directly on z, never committed or synced.
 .ssh/id_ed25519_executor_mac
 .ssh/id_ed25519_executor_mac.pub
+.ssh/id_ed25519_y
+.ssh/id_ed25519_y.pub
 
 # DSH owns runtime profiles, model settings, and provider credentials.
 # Only the non-secret, shared cordis.patch.yml is managed here.

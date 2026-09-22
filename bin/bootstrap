@@ -28,6 +28,6 @@ done
 cd "$repo"
 trap 'rm -f "$repo/result"' EXIT
 
-nix build .#darwinConfigurations.darwin.system
+nix build .#darwinConfigurations.y.system
 sudo -v
-sudo ./result/sw/bin/darwin-rebuild switch --flake "$repo#darwin"
+sudo ./result/sw/bin/darwin-rebuild switch --flake "$repo#y"

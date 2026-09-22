@@ -47,16 +47,16 @@
           ;
       };
 
-      darwin = mkSystem {
-        name = "darwin";
+      y = mkSystem {
+        name = "y";
         system = darwinSystem;
         user = "dp";
       };
 
-      box = mkSystem {
-        name = "box";
+      z = mkSystem {
+        name = "z";
         system = linuxSystem;
-        user = "z";
+        user = "dp";
         modules = [
           {
             # Keep Nix managed by NixOS while replacing only its package with
@@ -68,8 +68,8 @@
 
     in
     {
-      darwinConfigurations.darwin = darwin;
-      nixosConfigurations.box = box;
+      darwinConfigurations.y = y;
+      nixosConfigurations.z = z;
 
       formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt-tree;
       formatter.${linuxSystem} = nixpkgs.legacyPackages.${linuxSystem}.nixfmt-tree;
