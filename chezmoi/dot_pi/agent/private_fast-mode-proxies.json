@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "provider": "local-codex",
+      "baseUrl": "http://127.0.0.1:8317/v1"
+    }
+  ]
+}
