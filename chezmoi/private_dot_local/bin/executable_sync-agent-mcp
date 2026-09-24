@@ -49,9 +49,11 @@ def toml_config(text, entry):
 
 def plan(home, platform="linux"):
     if platform == "darwin":
+        # Without a scope, starting a daemon from a project can hide the shared
+        # connections behind a new workspace in the same database.
         stdio = {
             "command": "/Applications/Executor.app/Contents/Resources/executor/executor",
-            "args": ["mcp", "--no-artifacts", "--search-tools", "--elicitation-mode", "browser"],
+            "args": ["mcp", "--scope", str(home / ".executor"), "--no-artifacts", "--search-tools", "--elicitation-mode", "browser"],
         }
     elif platform == "linux":
         stdio = {"command": str(home / ".local/bin/executor-mcp"), "args": []}

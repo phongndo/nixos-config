@@ -7,7 +7,7 @@
         transport: stdio
 {{ if eq .chezmoi.os "darwin" }}
         command: /Applications/Executor.app/Contents/Resources/executor/executor
-        args: [mcp, --no-artifacts, --search-tools, --elicitation-mode, browser]
+        args: [mcp, --scope, {{ printf "%s/.executor" .chezmoi.homeDir | quote }}, --no-artifacts, --search-tools, --elicitation-mode, browser]
 {{ else }}
         command: {{ printf "%s/.local/bin/executor-mcp" .chezmoi.homeDir | quote }}
         args: []
