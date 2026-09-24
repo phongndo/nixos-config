@@ -57,6 +57,7 @@ alt - 0x29      : app=com.mitchellh.ghostty; set -- $(/usr/bin/lsappinfo -q -non
 alt - c         : app=com.openai.codex; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
 alt - f         : app=net.imput.helium; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
 alt - s         : app=com.tinyspeck.slackmacgap; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
+alt - t         : exec /usr/bin/open -a '/Applications/T3 Code (Nightly).app'
 alt - p         : app=com.spotify.client; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
 alt - m         : app=com.apple.MobileSMS; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
 alt - e         : app=com.apple.finder; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
