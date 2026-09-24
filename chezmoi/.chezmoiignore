@@ -28,6 +28,27 @@ web-telemetry.jsonl
 herdr-agent-state.*
 herdr-tui-session.js
 
+# Claude Code: only settings and the shared instructions are chezmoi-managed.
+# Skills are distributed by sync-agent-skills, not copied from live state.
+.claude.json
+.claude/.credentials.json
+.claude/settings.local.json
+.claude/skills/**
+.claude/backups/**
+.claude/debug/**
+.claude/downloads/**
+.claude/file-history/**
+.claude/paste-cache/**
+.claude/plugins/**
+.claude/projects/**
+.claude/session-env/**
+.claude/shell-snapshots/**
+.claude/stats-cache.json
+.claude/statsig/**
+.claude/tasks/**
+.claude/telemetry/**
+.claude/todos/**
+
 # Only the non-secret CLIProxyAPI template is managed; OAuth and the generated
 # client/management keys and generated config are per-machine runtime state.
 .cli-proxy-api/auth/**
