@@ -2,7 +2,7 @@
 {{- /* Seed shared preferences, preserve machine-local settings, and remove only
       the obsolete Superset notification commands (not unrelated hooks). */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $merged := mustMergeOverwrite (dict "effortLevel" "high" "theme" "dark") (deepCopy $current) -}}
+{{- $merged := mustMergeOverwrite (dict "effortLevel" "high" "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
 {{- $events := dict -}}
 {{- range $event, $groups := (get $merged "hooks" | default dict) -}}
   {{- $keptGroups := list -}}

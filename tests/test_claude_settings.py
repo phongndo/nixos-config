@@ -20,7 +20,11 @@ def render(settings):
 
 class ClaudeSettingsTest(unittest.TestCase):
     def test_defaults_and_idempotence(self):
-        expected = {"effortLevel": "high", "theme": "dark"}
+        expected = {
+            "effortLevel": "high", "theme": "dark",
+            "permissions": {"defaultMode": "bypassPermissions"},
+            "skipDangerousModePermissionPrompt": True,
+        }
         self.assertEqual(render({}), expected)
         self.assertEqual(render(expected), expected)
 
