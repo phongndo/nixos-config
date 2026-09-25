@@ -24,25 +24,23 @@ class ClaudeSettingsTest(unittest.TestCase):
             "effortLevel": "high", "theme": "dark",
             "permissions": {"defaultMode": "bypassPermissions"},
             "skipDangerousModePermissionPrompt": True,
+            "autoMemoryEnabled": False,
+            "attribution": {"commit": "", "pr": ""},
         }
         self.assertEqual(render({}), expected)
         self.assertEqual(render(expected), expected)
 
-    def test_superset_removed_other_hooks_and_preferences_preserved(self):
-        local = {"model": "local", "permissions": {"defaultMode": "ask"}, "hooks": {
-            "Stop": [{"hooks": [
-                {"type": "command", "command": "echo keep"},
-                {"type": "command", "command": 'SUPERSET_HOME_DIR=1 SUPERSET_AGENT_ID=claude echo old'},
-            ]}],
-            "SessionEnd": [{"hooks": [
-                {"type": "command", "command": 'SUPERSET_HOME_DIR=1 SUPERSET_AGENT_ID=claude echo old'},
-            ]}],
-        }}
+    def test_local_preferences_preserved(self):
+        local = {"model": "local", "permissions": {"defaultMode": "ask"},
+                 "hooks": {"Stop": [{"hooks": [{"type": "command", "command": "echo keep"}]}]}}
         updated = render(local)
-        self.assertEqual(updated["model"], "local")
-        self.assertEqual(updated["permissions"], local["permissions"])
-        self.assertEqual(updated["hooks"], {"Stop": [{"hooks": [{"type": "command", "command": "echo keep"}]}]})
+        for key in local:
+            self.assertEqual(updated[key], local[key])
         self.assertEqual(render(updated), updated)
+
+    def test_attribution_disabled_over_local_value(self):
+        updated = render({"attribution": {"commit": "Co-Authored-By: Claude", "pr": "Generated"}})
+        self.assertEqual(updated["attribution"], {"commit": "", "pr": ""})
 
 
 if __name__ == "__main__":

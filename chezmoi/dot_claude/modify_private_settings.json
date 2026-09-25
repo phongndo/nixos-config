@@ -1,32 +1,10 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Seed shared preferences, preserve machine-local settings, enforce auto
-      memory off, and remove only the obsolete Superset notification commands
-      (not unrelated hooks). */ -}}
+{{- /* Seed shared preferences, preserve machine-local settings, and enforce
+      auto memory and commit/PR attribution off. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $merged := mustMergeOverwrite (dict "effortLevel" "high" "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
 {{- $_ := set $merged "autoMemoryEnabled" false -}}
-{{- $events := dict -}}
-{{- range $event, $groups := (get $merged "hooks" | default dict) -}}
-  {{- $keptGroups := list -}}
-  {{- range $group := $groups -}}
-    {{- $keptHooks := list -}}
-    {{- range $hook := $group.hooks -}}
-      {{- if not (and (eq $hook.type "command") (contains "SUPERSET_HOME_DIR" ($hook.command | default "")) (contains "SUPERSET_AGENT_ID=claude" ($hook.command | default ""))) -}}
-        {{- $keptHooks = append $keptHooks $hook -}}
-      {{- end -}}
-    {{- end -}}
-    {{- if $keptHooks -}}
-      {{- $keptGroups = append $keptGroups (set (deepCopy $group) "hooks" $keptHooks) -}}
-    {{- end -}}
-  {{- end -}}
-  {{- if $keptGroups -}}
-    {{- $_ := set $events $event $keptGroups -}}
-  {{- end -}}
-{{- end -}}
-{{- $merged = omit $merged "hooks" -}}
-{{- if $events -}}
-  {{- $_ := set $merged "hooks" $events -}}
-{{- end -}}
+{{- $_ := set $merged "attribution" (dict "commit" "" "pr" "") -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}
