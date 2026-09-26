@@ -1,0 +1,3 @@
+# Retired files formerly owned by this source tree; preserve all other state.
+.dsh/cordis.patch.yml
+.ssh/executor_mac_known_hosts

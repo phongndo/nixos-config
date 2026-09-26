@@ -32,6 +32,7 @@ gh/hosts.yml
 .nvimlog
 
 # Generated application state
+__pycache__/
 racket/racket-prefs.rktd
 
 # Stardew Valley for some reason

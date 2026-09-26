@@ -4,7 +4,6 @@ _:
   imports = [
     ./chezmoi.nix
     ./cli-proxy.nix
-    ./deepseek-harness.nix
     ./files.nix
     ./packages.nix
     ./shell.nix

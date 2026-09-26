@@ -59,20 +59,15 @@ herdr-tui-session.js
 .cli-proxy-api/config.lock
 .cli-proxy-api/logs/**
 
-# Only Linux needs the SSH bridge. Both hosts configure the same four agents.
+# Only Linux needs the wrapper for its local Executor installation.
 {{ if ne .chezmoi.os "linux" }}
 .local/bin/executor-mcp
-.ssh/executor_mac_known_hosts
 {{ end }}
 
-# Machine keys are provisioned directly on z, never committed or synced.
-.ssh/id_ed25519_executor_mac
-.ssh/id_ed25519_executor_mac.pub
-.ssh/id_ed25519_y
-.ssh/id_ed25519_y.pub
+# Machine keys are provisioned directly, never committed or synced.
+.ssh/id_*
 
-# DSH owns runtime profiles, model settings, and provider credentials.
-# Only the non-secret, shared cordis.patch.yml is managed here.
-.dsh/.credentials.yaml
-.dsh/settings.yaml
-.dsh/profiles/**
+# Retired agent state must not be re-imported into the source tree.
+.dsh/**
+# Let .chezmoiremove remove the formerly managed patch.
+!.dsh/cordis.patch.yml

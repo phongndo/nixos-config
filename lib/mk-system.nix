@@ -39,10 +39,20 @@ systemBuilder {
     machineConfig
     userSystemConfig
 
-    {
+    ({ pkgs, ... }: {
       nixpkgs.config.allowUnfree = true;
       system.configurationRevision = self.rev or self.dirtyRev or null;
-    }
+
+      # Use the same login shell on both hosts. Home Manager owns prompt and
+      # completion initialization; the system only supplies the shell and paths.
+      users.users.${user}.shell = pkgs.zsh;
+      programs.zsh = {
+        enable = true;
+        enableBashCompletion = false;
+        enableGlobalCompInit = false;
+        promptInit = "";
+      };
+    })
     homeManagerModule
     {
       home-manager = {

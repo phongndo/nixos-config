@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """Reconcile MCP entries for Pi, Codex, and OpenCode on macOS and Linux.
 
-DSH's MCP plugin is managed directly by chezmoi. These are the only four
-supported agents; do not create configuration for uninstalled agents.
-
 Called after chezmoi applies native configs (notably Codex and OpenCode).
-Only Executor is replaced. Credentials stay on the Mac; this tree contains
-only local stdio commands (direct on Mac, restricted SSH on Linux).
+Only Executor is replaced. Each host uses its own local stdio command and
+connection store; credentials are never copied between machines.
 Python 3.11+ is required.
 """
 import json

@@ -6,21 +6,15 @@ minimum_release_age = "0s"
 package_manager = "npm"
 
 [tools]
+# Agent tools intentionally track latest independently of the Nix generation.
 codex = "latest"
 claude = "latest"
 python = "3.14"
 opencode = "latest"
 pi = "latest"
-{{ if eq .chezmoi.os "linux" -}}
-# Shared with home/deepseek-harness.nix: upgrades must not remove its runtime.
-node = "{{ .harnessRuntime.node }}"
-"npm:@deepseek-ai/dsh" = "{{ .harnessRuntime.dsh }}"
-# Required by `dsh plugin` to manage profile dependencies.
-pnpm = "{{ .harnessRuntime.pnpm }}"
-# macOS uses the Homebrew installation.
-"npm:executor" = "latest"
-{{ else -}}
 node = "26"
-"npm:@deepseek-ai/dsh" = "latest"
+{{ if eq .chezmoi.os "linux" -}}
+# macOS uses Executor.app.
+"npm:executor" = "latest"
 {{ end -}}
 herdr = "latest"

@@ -34,20 +34,7 @@
 
   time.timeZone = "America/Los_Angeles";
 
-  i18n = {
-    defaultLocale = "en_US.UTF-8";
-    extraLocaleSettings = {
-      LC_ADDRESS = "en_US.UTF-8";
-      LC_IDENTIFICATION = "en_US.UTF-8";
-      LC_MEASUREMENT = "en_US.UTF-8";
-      LC_MONETARY = "en_US.UTF-8";
-      LC_NAME = "en_US.UTF-8";
-      LC_NUMERIC = "en_US.UTF-8";
-      LC_PAPER = "en_US.UTF-8";
-      LC_TELEPHONE = "en_US.UTF-8";
-      LC_TIME = "en_US.UTF-8";
-    };
-  };
+  i18n.defaultLocale = "en_US.UTF-8";
 
   nix.settings = {
     experimental-features = [
@@ -65,20 +52,20 @@
   # required before the user profile is available.
   environment.systemPackages = [ pkgs.ghostty.terminfo ];
 
-  programs.nix-ld.enable = true;
+  programs = {
+    nix-ld.enable = true;
 
-  # Pin y's host key so unattended SSH never needs a trust-on-first-use prompt.
-  programs.ssh.knownHosts.y = {
-    extraHostNames = [ "100.90.20.37" ];
-    publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPChw4RsEFgDyt/Wc9GVoLw4nztnx7us5pWwUg5EFYXu";
+    # The shared shell uses eza; avoid spawning dircolors for each Zsh startup.
+    zsh.enableLsColors = false;
+
+    # Pin y's host key so unattended SSH never needs a trust-on-first-use prompt.
+    ssh.knownHosts.y = {
+      extraHostNames = [ "100.90.20.37" ];
+      publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPChw4RsEFgDyt/Wc9GVoLw4nztnx7us5pWwUg5EFYXu";
+    };
   };
 
   services = {
-    xserver.xkb = {
-      layout = "us";
-      variant = "";
-    };
-
     # Mirror the Mac's Karabiner layers on every detected keyboard.
     kanata = {
       enable = true;
@@ -109,7 +96,6 @@
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
     22
     443
-    8443 # DeepSeek Harness; its backend remains on loopback.
   ];
 
   # Personal file storage is independent of the Immich deployment.

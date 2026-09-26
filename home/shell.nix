@@ -101,24 +101,6 @@ in
           # The patch works around atuin#3606 for SSH login shells.
           source ${atuinPtyZshInit}
         '')
-        (lib.mkOrder 550 ''
-          # Add custom completions before compinit, then remove missing and
-          # duplicate-by-target fpath entries contributed by Nix profiles.
-          if [[ -z "''${IN_NIX_SHELL:-}" ]]; then
-            fpath=("$HOME/.grok/completions/zsh" $fpath)
-          fi
-          typeset -A _fpath_seen
-          typeset -a _fpath_unique
-          for _fpath_dir in $fpath; do
-            [[ -d "$_fpath_dir" ]] || continue
-            _fpath_real="''${_fpath_dir:A}"
-            [[ -n "''${_fpath_seen[$_fpath_real]-}" ]] && continue
-            _fpath_seen[$_fpath_real]=1
-            _fpath_unique+=("$_fpath_dir")
-          done
-          fpath=("''${_fpath_unique[@]}")
-          unset _fpath_seen _fpath_unique _fpath_dir _fpath_real
-        '')
         (lib.mkOrder 900 ''
           # Home Manager creates the history parent on every startup. Its parent
           # already exists, so implement that one check with Zsh builtins.
@@ -153,6 +135,24 @@ in
             # also registers zoxide's completion, which was defined above.
             _load_shell_completions() {
               (( ''${_shell_completions_loaded:-0} )) && return 0
+
+              # Resolve completion paths only when completion is first used.
+              # Nix profiles can contribute several symlinks to the same target.
+              if [[ -z "''${IN_NIX_SHELL:-}" ]]; then
+                fpath=("$HOME/.grok/completions/zsh" $fpath)
+              fi
+              local -A seen
+              local -a unique
+              local dir real
+              for dir in $fpath; do
+                [[ -d "$dir" ]] || continue
+                real="''${dir:A}"
+                [[ -n "''${seen[$real]-}" ]] && continue
+                seen[$real]=1
+                unique+=("$dir")
+              done
+              fpath=("''${unique[@]}")
+
               autoload -Uz compinit
               local cache_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
               [[ -d "$cache_dir" ]] || mkdir -p "$cache_dir"
@@ -165,6 +165,9 @@ in
                 zcompile "$dump"
               fi
               (( $+functions[__zoxide_z_complete] )) && compdef __zoxide_z_complete z
+              # Lazy FZF initialization runs after Atuin. Keep Ctrl-R owned by
+              # Atuin and leave directory navigation to zoxide.
+              local FZF_CTRL_R_COMMAND="" FZF_ALT_C_COMMAND=""
               source ${pkgs.fzf}/share/fzf/key-bindings.zsh
               source ${pkgs.fzf}/share/fzf/completion.zsh
               bindkey -r '^[c'

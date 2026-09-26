@@ -20,12 +20,4 @@ _:
     publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAFCKBLd4XKaEVeOFk1B9nj8vt3eoo1HJ6IYagK5fvOp";
   };
 
-  # Let nix-darwin provide the system shell and completion paths. Home Manager
-  # owns the prompt and completion initialization, so do not run both twice.
-  programs.zsh = {
-    enable = true;
-    enableBashCompletion = false;
-    enableGlobalCompInit = false;
-    promptInit = "";
-  };
 }

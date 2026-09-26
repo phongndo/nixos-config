@@ -18,9 +18,7 @@
       "usb_storage"
       "sd_mod"
     ];
-    initrd.kernelModules = [ ];
     kernelModules = [ "kvm-amd" ];
-    extraModulePackages = [ ];
   };
 
   fileSystems = {
@@ -62,8 +60,6 @@
       options = [ "noatime" ];
     };
   };
-
-  swapDevices = [ ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

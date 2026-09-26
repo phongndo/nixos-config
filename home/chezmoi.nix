@@ -38,8 +38,8 @@ in
           --no-tty
       '';
 
-      # Install pinned service runtimes before systemd reloads/starts user units.
-      miseInstall = lib.hm.dag.entryBetween [ "reloadSystemd" ] [ "chezmoiApply" ] ''
+      # Install the tools selected by the freshly applied mise configuration.
+      miseInstall = lib.hm.dag.entryAfter [ "chezmoiApply" ] ''
         $DRY_RUN_CMD ${lib.getExe unstablePkgs.mise} --yes -C "${config.home.homeDirectory}" install
       '';
     };

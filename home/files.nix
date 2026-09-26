@@ -25,7 +25,7 @@ in
     file = lib.mkMerge [
       {
         ".bashrc".force = true;
-        ".zshenv" = immutable ./zshenv;
+        ".zshenv".force = true;
       }
 
       (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
