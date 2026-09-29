@@ -3,7 +3,7 @@
 # Keep high-frequency yabai hotkeys direct and quiet. skhd already runs each
 # command through a shell; extra wrapper scripts and query+jq paths add latency.
 # In stack layout, use alt-tab/shift-alt-tab to move within the stack.
-# Alt-h/j/k/l is reserved for terminal applications such as Lemma.
+# Alt-h/j/k/l is reserved for terminal applications such as Frame.
 
 # Layout. Stack gives one full-screen managed window at a time; BSP gives splits.
 alt - 0x2C : yabai -m space --layout bsp >/dev/null 2>&1
