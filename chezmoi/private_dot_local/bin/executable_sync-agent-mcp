@@ -22,6 +22,24 @@ def json_config(text, entry, key="mcpServers"):
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
+def pi_config(text, entry):
+    data = json.loads(text) if text.strip() else {}
+    servers = data.setdefault("mcpServers", {})
+    executor = dict(servers.get("executor", {}))
+    # Migrate the custom extension's toggle once; native Pi owns enabled from here on.
+    if "disabled" in executor:
+        executor["enabled"] = not executor.pop("disabled")
+    # Replace the managed connection, not Pi's mutable exposure/toggle/timeout settings.
+    for key in ("type", "env", "cwd", "url", "headers", "oauth"):
+        executor.pop(key, None)
+    executor.update(entry)
+    # Executor already provides discovery and sandboxed execution; avoid nesting it
+    # behind Pi's codemode by default. Preserve later choices made through /mcp.
+    executor.setdefault("exposure", "direct")
+    servers["executor"] = executor
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
 def toml_config(text, entry):
     before = tomllib.loads(text)
     expected = dict(before)
@@ -70,13 +88,11 @@ def plan(home, platform="linux"):
         if new != old:
             changes[path] = (old, new)
 
-    patch(".config/mcp/mcp.json", lambda old: json_config(old, stdio))  # Pi.
+    patch(".pi/agent/mcp.json", lambda old: pi_config(old, stdio))
     patch(".codex/config.toml", lambda old: toml_config(old, {**stdio, "startup_timeout_sec": 30}))
     patch(".config/opencode/opencode.jsonc", lambda old: json_config(old, {
         "type": "local", "command": [stdio["command"], *stdio["args"]], "enabled": True, "timeout": 30000,
     }, "mcp"))
-    # Pi enables shared entries by default. Do not reset its mutable /mcp
-    # overlay: disabling Executor in Pi must survive a chezmoi apply.
     return changes
 
 

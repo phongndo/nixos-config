@@ -33,6 +33,12 @@ repository. Skill sync reads the separate `~/code/pi-extensions` checkout;
 its source and destinations are declared in
 `chezmoi/dot_config/agent-skills/targets.json`.
 
+`sync-agent-mcp` configures each agent's host-local Executor connection. Pi uses
+its built-in MCP support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
+Sync preserves Pi's enable/disable and tool-exposure choices. Executor defaults
+to direct exposure because it already provides tool discovery and sandboxed
+execution. Integration credentials stay in Executor's local store.
+
 ## Check and apply
 
 From the repository root, without activating either host:
