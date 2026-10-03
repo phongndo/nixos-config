@@ -2,7 +2,6 @@
   self,
   nixpkgs,
   nixpkgs-unstable,
-  llm-agents,
   home-manager,
   nix-darwin,
 }:
@@ -60,7 +59,6 @@ systemBuilder {
         useUserPackages = true;
         extraSpecialArgs = {
           configurationName = name;
-          cliProxyPackage = llm-agents.packages.${system}.cli-proxy-api;
           inherit isDarwin rebuildCommand unstablePkgs;
         };
         users.${user} = import userHomeConfig;

@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    llm-agents.url = "github:numtide/llm-agents.nix";
     determinate-nix = {
       url = "https://flakehub.com/f/DeterminateSystems/nix-src/3.22.2";
       # Match the dependency revision tested by this Determinate release.
@@ -27,7 +26,6 @@
       self,
       nixpkgs,
       nixpkgs-unstable,
-      llm-agents,
       determinate-nix,
       home-manager,
       nix-darwin,
@@ -41,7 +39,6 @@
           self
           nixpkgs
           nixpkgs-unstable
-          llm-agents
           home-manager
           nix-darwin
           ;

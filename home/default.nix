@@ -3,7 +3,6 @@ _:
 {
   imports = [
     ./chezmoi.nix
-    ./cli-proxy.nix
     ./files.nix
     ./packages.nix
     ./shell.nix

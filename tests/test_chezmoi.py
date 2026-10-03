@@ -54,6 +54,14 @@ class ChezmoiTest(unittest.TestCase):
                     self.assertNotIn("pnpm", tools)
                     self.assertEqual("npm:executor" in tools, platform == "linux")
                     self.assertEqual((home / ".local/bin/executor-mcp").exists(), platform == "linux")
+                    pi = json.loads((home / ".pi/agent/settings.json").read_text())
+                    self.assertEqual(pi["defaultProvider"], "openai-codex")
+                    codex = tomllib.loads((home / ".codex/config.toml").read_text())
+                    self.assertEqual(codex["model_provider"], "openai")
+                    self.assertNotIn("local-codex", codex.get("model_providers", {}))
+                    for name in (".cli-proxy-api", ".pi/agent/models.json",
+                                 ".pi/agent/fast-mode-proxies.json"):
+                        self.assertFalse((home / name).exists(), name)
 
 
 if __name__ == "__main__":
