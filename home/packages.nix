@@ -5,6 +5,24 @@
   ...
 }:
 
+let
+  # T3 Code's desktop app self-updates; the server on z must match its version.
+  # On z, update the background service in place; elsewhere, do that over SSH.
+  t3Update = pkgs.writeShellApplication {
+    name = "t3-update";
+    runtimeInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.jq ];
+    text =
+      if pkgs.stdenv.hostPlatform.isLinux then
+        ''
+          version="$(jq -er .activeVersion "$HOME/.t3/runtime/service-state.json")"
+          exec "$HOME/.t3/runtime/versions/$version/t3" update --yes "$@"
+        ''
+      else
+        ''
+          exec ssh z t3-update "$@"
+        '';
+  };
+in
 {
   home.packages =
     (with pkgs; [
@@ -53,7 +71,10 @@
       zig # ZLS needs the compiler and standard library; use a matching project version.
       zls
     ])
-    ++ [ unstablePkgs.llama-cpp ]
+    ++ [
+      t3Update
+      unstablePkgs.llama-cpp
+    ]
     # Linux-only packages; macOS gets 1Password CLI through Homebrew.
     ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux (
       with pkgs;
