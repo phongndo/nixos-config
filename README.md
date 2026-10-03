@@ -47,7 +47,6 @@ From the repository root, without activating either host:
 nix flake check --all-systems --no-build --no-write-lock-file
 deadnix --fail .
 statix check .
-python3 -m unittest discover -s tests
 ```
 
 Build on the corresponding host before applying:
@@ -61,9 +60,6 @@ sudo darwin-rebuild switch --flake .#y
 nix build --no-link .#nixosConfigurations.z.config.system.build.toplevel
 sudo nixos-rebuild switch --flake .#z
 ```
-
-After switching, run `source ./tests/zsh.zsh` in an interactive Zsh to check
-completion and the Ctrl-R, Ctrl-T, and Ctrl-G shortcuts.
 
 On a new Mac, install Determinate Nix and Homebrew first, then use
 `./bin/bootstrap`. Determinate owns y's Nix daemon; NixOS owns z's daemon

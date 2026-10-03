@@ -109,24 +109,3 @@ Add its server package to the language-tools block in `../home/packages.nix`
 and its `nvim-lspconfig` name to `vim.lsp.enable` in `init.lua`. Rebuild once;
 project roots, filetypes, and launch commands normally come from lspconfig.
 Only add custom settings for a demonstrated need.
-
-## Smoke test
-
-With the configured plugins, servers, and Rust toolchain available, run from the
-repository root:
-
-```sh
-nvim --headless -i NONE -u ./nvim/init.lua -l ./nvim/tests/lsp.lua
-nvim --headless -u NONE -i NONE -l ./nvim/tests/completion.lua
-```
-
-The LSP test uses temporary projects to check real server attachment, duplicate
-clients, shared keybindings, completion capabilities, and diagnostic display
-policy. Its C++ fixture checks that clangd consumes project include paths/defines
-and reports then clears a real type error. It does not validate an actual
-LLVM/llama.cpp build or every language's project/toolchain integration.
-
-The completion test drives real keystrokes in a child Neovim: automatic
-suggestions do not preselect or insert text, Enter remains a newline until
-selection, Tab indents outside snippets, and completion can be dismissed and
-manually reopened. It also checks that command-line completion stays disabled.
