@@ -1,6 +1,9 @@
 model_provider = "openai"
 model_reasoning_effort = "high"
 approvals_reviewer = "user"
+approval_policy = "never"
+default_permissions = ":danger-full-access"
+suppress_unstable_features_warning = true
 
 [projects."{{ .chezmoi.homeDir }}/code/frame"]
 trust_level = "trusted"
