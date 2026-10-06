@@ -53,7 +53,32 @@
   environment.systemPackages = [ pkgs.ghostty.terminfo ];
 
   programs = {
-    nix-ld.enable = true;
+    # Prebuilt Linux binaries find these through nix-ld; T3 Code's downloaded
+    # headless Chrome (its preview browser) needs this set.
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        alsa-lib
+        at-spi2-atk
+        at-spi2-core
+        atk
+        dbus
+        expat
+        glib
+        libgbm
+        libx11
+        libxcb
+        libxcomposite
+        libxdamage
+        libxext
+        libxfixes
+        libxkbcommon
+        libxrandr
+        nspr
+        nss
+        systemd
+      ];
+    };
 
     # The shared shell uses eza; avoid spawning dircolors for each Zsh startup.
     zsh.enableLsColors = false;
