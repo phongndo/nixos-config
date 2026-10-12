@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Reconcile MCP entries for Pi, Codex, and OpenCode on macOS and Linux.
+"""Reconcile MCP entries for Pi and Codex on macOS and Linux.
 
-Called after chezmoi applies native configs (notably Codex and OpenCode).
+Called after chezmoi applies native configs.
 Only Executor is replaced. Each host uses its own local stdio command and
 connection store; credentials are never copied between machines.
 Python 3.11+ is required.
@@ -13,13 +13,6 @@ import re
 import sys
 import tempfile
 import tomllib
-
-
-def json_config(text, entry, key="mcpServers"):
-    # The chezmoi-managed OpenCode .jsonc is deliberately plain JSON too.
-    data = json.loads(text) if text.strip() else {}
-    data.setdefault(key, {})["executor"] = entry
-    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
 def pi_config(text, entry):
@@ -90,9 +83,6 @@ def plan(home, platform="linux"):
 
     patch(".pi/agent/mcp.json", lambda old: pi_config(old, stdio))
     patch(".codex/config.toml", lambda old: toml_config(old, {**stdio, "startup_timeout_sec": 30}))
-    patch(".config/opencode/opencode.jsonc", lambda old: json_config(old, {
-        "type": "local", "command": [stdio["command"], *stdio["args"]], "enabled": True, "timeout": 30000,
-    }, "mcp"))
     return changes
 
 

@@ -9,8 +9,8 @@ package_manager = "npm"
 # Agent tools intentionally track latest independently of the Nix generation.
 codex = "latest"
 claude = "latest"
-python = "3.14"
-opencode = "latest"
+python = "3.15"
+# OpenCode is intentionally omitted pending its b2 release.
 pi = "latest"
 node = "26"
 {{ if eq .chezmoi.os "linux" -}}

@@ -5,9 +5,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     determinate-nix = {
-      url = "https://flakehub.com/f/DeterminateSystems/nix-src/3.22.2";
+      url = "https://flakehub.com/f/DeterminateSystems/nix-src/3.23.1";
       # Match the dependency revision tested by this Determinate release.
-      inputs.nixpkgs.url = "github:NixOS/nixpkgs/4382ed2b7a6839d4280a9b386db49cbc5907414d";
+      inputs.nixpkgs.url = "github:NixOS/nixpkgs/c5c4a43b0e8056328ec4529f735cabdb8f1942bb";
     };
 
     home-manager = {
