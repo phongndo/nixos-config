@@ -165,6 +165,7 @@ in
                 zcompile "$dump"
               fi
               (( $+functions[__zoxide_z_complete] )) && compdef __zoxide_z_complete z
+              (( $+functions[_hz_complete] )) && compdef _hz_complete hz _hz
               # Lazy FZF initialization runs after Atuin. Keep Ctrl-R owned by
               # Atuin and leave directory navigation to zoxide.
               local FZF_CTRL_R_COMMAND="" FZF_ALT_C_COMMAND=""

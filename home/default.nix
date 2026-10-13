@@ -5,6 +5,7 @@ _:
     ./chezmoi.nix
     ./files.nix
     ./packages.nix
+    ./personal-projects.nix
     ./shell.nix
   ];
 

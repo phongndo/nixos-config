@@ -4,6 +4,7 @@
   nixpkgs-unstable,
   home-manager,
   nix-darwin,
+  personalProjects,
 }:
 
 {
@@ -59,7 +60,12 @@ systemBuilder {
         useUserPackages = true;
         extraSpecialArgs = {
           configurationName = name;
-          inherit isDarwin rebuildCommand unstablePkgs;
+          inherit
+            isDarwin
+            rebuildCommand
+            unstablePkgs
+            personalProjects
+            ;
         };
         users.${user} = import userHomeConfig;
       };

@@ -23,6 +23,13 @@ Nix inputs and packages are pinned by `flake.lock`. Immich container images
 are pinned by digest in `machines/nixos/immich/docker-compose.yml`; update its
 server and machine-learning images together.
 
+Personal projects are managed in `home/personal-projects.nix`: `mark` and `hz`
+on both hosts, and `leetvim` on y. Their GitHub sources are pinned as flake
+inputs; hz and leetvim use their own packages, while mark is built here from
+its Cargo lockfile. Home Manager also loads hz's Bash and Zsh integration.
+Update with `nix flake update mark hz leetvim`, then build and apply on each
+host as below. Use this workflow instead of the tools' self-update commands.
+
 Homebrew apps, mise tools, and live chezmoi files are intentionally outside
 Nix's reproducibility and rollback guarantees. Files marked `writable` in
 `home/files.nix` link to this checkout so application edits can be reviewed
