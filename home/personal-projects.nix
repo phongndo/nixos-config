@@ -1,53 +1,19 @@
+{ lib, ... }:
+
 {
-  lib,
-  pkgs,
-  personalProjects,
-  ...
-}:
-
-let
-  mark = pkgs.rustPlatform.buildRustPackage {
-    pname = "mark";
-    src = personalProjects.mark;
-    version =
-      (builtins.fromTOML (builtins.readFile "${personalProjects.mark}/Cargo.toml"))
-      .workspace.package.version;
-    cargoLock.lockFile = "${personalProjects.mark}/Cargo.lock";
-    cargoBuildFlags = [
-      "-p"
-      "mark-cli"
-    ];
-    cargoTestFlags = [
-      "-p"
-      "mark-cli"
-    ];
-    nativeCheckInputs = [ pkgs.git ];
-    meta.mainProgram = "mark";
-  };
-
-  hz = personalProjects.hz.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  hzZshInit = pkgs.runCommand "hz-zsh-init" { } ''
-    ${lib.getExe hz} shell zsh > "$out"
-    # Completion initialization belongs to the shared shell's lazy loader.
-    substituteInPlace "$out" --replace-fail 'autoload -Uz compinit && compinit' ':'
-  '';
-  hzBashInit = pkgs.runCommand "hz-bash-init" { } ''
-    ${lib.getExe hz} shell bash > "$out"
-  '';
-in
-{
-  home.packages = [
-    mark
-    hz
-  ]
-  ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
-    personalProjects.leetvim.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ];
-
+  # Use the installed version's integration so mise upgrades take effect in
+  # new shells without a Nix rebuild. The binaries are managed by chezmoi/mise.
   programs.zsh.initContent = lib.mkAfter ''
-    source ${hzZshInit}
+    if command -v hz >/dev/null 2>&1; then
+      _hz_init="$(command hz shell zsh)"
+      # Completion initialization belongs to the shared shell's lazy loader.
+      eval "''${_hz_init/autoload -Uz compinit && compinit/:}"
+      unset _hz_init
+    fi
   '';
   programs.bash.initExtra = lib.mkAfter ''
-    source ${hzBashInit}
+    if command -v hz >/dev/null 2>&1; then
+      eval "$(command hz shell bash)"
+    fi
   '';
 }

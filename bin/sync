@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -eu
+
+repo=$(
+  unset CDPATH
+  cd -- "$(dirname -- "$0")/.."
+  pwd
+)
+
+case "$(uname -s):$(hostname -s)" in
+  Darwin:y)
+    host=y
+    build=darwinConfigurations.y.system
+    rebuild=darwin-rebuild
+    ;;
+  Linux:z)
+    host=z
+    build=nixosConfigurations.z.config.system.build.toplevel
+    rebuild=nixos-rebuild
+    ;;
+  *)
+    echo "sync: run this on macOS y or NixOS z" >&2
+    exit 1
+    ;;
+esac
+
+cd "$repo"
+if [ -n "$(git status --porcelain)" ]; then
+  echo "sync: commit or stash local changes before syncing" >&2
+  exit 1
+fi
+if [ "$(git branch --show-current)" != main ]; then
+  echo "sync: switch to main before syncing" >&2
+  exit 1
+fi
+
+git pull --ff-only origin main
+nix build --no-link --no-write-lock-file ".#$build"
+sudo "$rebuild" switch --flake "$repo#$host"
+
+# Home Manager applies the mise config and installs missing tools. Upgrade
+# existing tools too, keeping the versions/ranges declared in that config.
+mise --yes -C "$HOME" upgrade
+printf 'Synced %s. Open a new shell to load updated integrations.\n' "$host"

@@ -4,7 +4,6 @@
   nixpkgs-unstable,
   home-manager,
   nix-darwin,
-  personalProjects,
 }:
 
 {
@@ -64,7 +63,6 @@ systemBuilder {
             isDarwin
             rebuildCommand
             unstablePkgs
-            personalProjects
             ;
         };
         users.${user} = import userHomeConfig;

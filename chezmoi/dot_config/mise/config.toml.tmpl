@@ -13,6 +13,13 @@ python = "3.15"
 # OpenCode is intentionally omitted pending its b2 release.
 pi = "latest"
 node = "26"
+# Personal tools follow published releases independently of Nix.
+"github:phongndo/mark" = "latest"
+"github:phongndo/hz" = "latest"
+"github:phongndo/frame" = "latest"
+{{ if eq .chezmoi.os "darwin" -}}
+"github:phongndo/leetvim" = "latest"
+{{ end -}}
 {{ if eq .chezmoi.os "linux" -}}
 # macOS uses Executor.app.
 "npm:executor" = "latest"

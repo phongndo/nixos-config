@@ -20,12 +20,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    mark = {
-      url = "github:phongndo/mark";
-      flake = false;
-    };
-    hz.url = "github:phongndo/hz";
-    leetvim.url = "github:phongndo/leetvim";
   };
 
   outputs =
@@ -36,9 +30,6 @@
       determinate-nix,
       home-manager,
       nix-darwin,
-      mark,
-      hz,
-      leetvim,
       ...
     }:
     let
@@ -52,7 +43,6 @@
           home-manager
           nix-darwin
           ;
-        personalProjects = { inherit mark hz leetvim; };
       };
 
       y = mkSystem {
