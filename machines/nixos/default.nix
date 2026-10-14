@@ -42,10 +42,20 @@
       "flakes"
     ];
 
+    # Bound both simultaneous derivations and parallel workers per derivation.
+    max-jobs = 2;
+    cores = 4;
+
     # Determinate's evaluator features are not enabled by the NixOS module,
     # because NixOS owns nix.conf instead of the Determinate installer.
     eval-cores = 0;
     lazy-trees = true;
+  };
+
+  # Compress cold pages during bursts; this is capacity, not reserved RAM.
+  zramSwap = {
+    enable = true;
+    memoryPercent = 25;
   };
 
   # User-facing tools are owned by Home Manager. Keep only the terminal data
@@ -53,6 +63,8 @@
   environment.systemPackages = [ pkgs.ghostty.terminfo ];
 
   programs = {
+    atop.enable = true;
+
     # Prebuilt Linux binaries find these through nix-ld; T3 Code's downloaded
     # headless Chrome (its preview browser) needs this set.
     nix-ld = {
@@ -123,8 +135,52 @@
     443
   ];
 
-  # Personal file storage is independent of the Immich deployment.
-  systemd.tmpfiles.rules = [ "d /srv/data/files 0750 dp users -" ];
+  # The recording service reads these separately from the interactive atoprc.
+  environment.etc."default/atop".text = ''
+    LOGINTERVAL=60
+    LOGGENERATIONS=14
+  '';
+
+  systemd = {
+    services.nix-daemon.serviceConfig = {
+      MemoryHigh = "8G";
+      MemoryMax = "10G";
+      TasksMax = 2048;
+      # Fail builds together on OOM and recover the daemon for subsequent jobs.
+      OOMPolicy = "kill";
+      ManagedOOMMemoryPressure = "kill";
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+
+    # Builds, agents, and the UI have separate ceilings totalling 24 GiB.
+    # The remaining RAM supports the OS, SSH/Tailscale, and the Immich stack.
+    user = {
+      slices."app-t3code".sliceConfig = {
+        # T3 adjusts its child slices at runtime. Limit their parent so those
+        # adjustments cannot consume the host's remaining memory budget.
+        MemoryHigh = "8G";
+        MemoryMax = "10G";
+        TasksMax = 2048;
+        ManagedOOMMemoryPressure = "kill";
+      };
+
+      units."t3code.service" = {
+        # Keep the app's executable and environment; add only resource policy.
+        overrideStrategy = "asDropin";
+        text = ''
+          [Service]
+          MemoryHigh=3G
+          MemoryMax=4G
+          TasksMax=2048
+          OOMPolicy=kill
+        '';
+      };
+    };
+
+    # Personal file storage is independent of the Immich deployment.
+    tmpfiles.rules = [ "d /srv/data/files 0750 dp users -" ];
+  };
 
   # Preserve the version from the machine's original installation.
   system.stateVersion = "26.05";

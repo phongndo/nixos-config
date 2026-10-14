@@ -92,3 +92,17 @@ On z, provision the declared disks, SSH keys, and Tailscale login separately.
 Immich needs `/var/lib/immich/.env` with mode `0600`, based on
 `machines/nixos/immich/.env.example`. Tailscale Serve routing is provisioned
 on the machine and is not restored by a Nix rebuild.
+
+z's resource policy lives in `machines/nixos/default.nix`: it bounds Nix build
+concurrency, gives builds and T3 workers separate memory budgets, and enables
+compressed swap. The T3 server has its own budget outside the worker slice;
+OOM failures in builds or agents should not exhaust the host. Apply the policy
+with the normal NixOS rebuild, then run `systemctl --user daemon-reload` to load
+the user service and slice settings. Existing T3 processes do not need restarting
+for the memory limits to take effect.
+
+Atop records process and system history under `/var/log/atop`. Inspect a day's
+recording with `sudo atop -r /var/log/atop/atop_YYYYMMDD` and press `m` for memory.
+Use `systemd-cgtop` for current usage by workload, `oomctl` for monitored groups,
+and `journalctl -k -g 'oom-kill:|Out of memory:'` for kernel OOM events. The
+sampling interval and log retention are declared with the resource policy.

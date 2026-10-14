@@ -38,6 +38,10 @@ fi
 git pull --ff-only origin main
 nix build --no-link --no-write-lock-file ".#$build"
 sudo "$rebuild" switch --flake "$repo#$host"
+if [ "$host" = z ]; then
+  # Load the resource policy for the already-running user services and slices.
+  systemctl --user daemon-reload
+fi
 
 # Home Manager applies the mise config and installs missing tools. Upgrade
 # existing tools too, keeping the versions/ranges declared in that config.
