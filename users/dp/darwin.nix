@@ -42,6 +42,7 @@ _:
       "ghostty"
       "karabiner-elements"
       "keymapp"
+      "opencode-desktop"
       "openlogi"
       "tailscale-app"
     ];
