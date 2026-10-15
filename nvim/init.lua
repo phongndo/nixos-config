@@ -73,6 +73,20 @@ require("lazy").setup({
           nixd = { formatting = { command = { "nixfmt" } } },
         },
       })
+      if vim.fn.has("mac") == 1 then
+        -- nixpkgs' clangd wrapper adds nix's libc++ and libSystem headers to every file,
+        -- which clash with the Xcode SDK clangd picks for files without a
+        -- compile_commands.json (<algorithm>: "reference to unresolved using
+        -- declaration"). --query-driver turns that off; clangd asks the compiler instead:
+        -- Xcode's, or a development shell's nix clang named in compile_commands.json.
+        vim.lsp.config("clangd", {
+          cmd = {
+            "clangd",
+            "--query-driver=/usr/bin/*,/Applications/Xcode*.app/**/bin/*,"
+              .. "/Library/Developer/CommandLineTools/**/bin/*,/nix/store/*/bin/*",
+          },
+        })
+      end
 
       -- Executables come from home/packages.nix or the project's development shell.
       -- Keep compiler flags, Python environments, etc. in project configuration.
