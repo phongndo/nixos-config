@@ -59,7 +59,7 @@ in
     # Project development shells can put matching server/toolchain versions first on PATH.
     ++ (with pkgs; [
       bash-language-server
-      clang-tools # clangd for C / C++
+      clang-tools # clangd for C / C++ (macOS nvim uses Xcode's; see nvim/init.lua)
       nixd
       ocamlPackages.ocaml-lsp
       ocamlformat # ocamlformat-rpc is used for OCaml hover formatting
