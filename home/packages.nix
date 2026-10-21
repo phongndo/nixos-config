@@ -33,8 +33,6 @@ in
       fd
       ffmpeg
       fzf
-      # Native toolchain for T3 Code's npm/node-pty builds (Node itself stays on mise).
-      gcc
       gh
       git
       git-lfs
@@ -80,6 +78,9 @@ in
       with pkgs;
       [
         _1password-cli
+        # Native toolchain for T3 Code's npm/node-pty builds (Node itself stays on mise).
+        # On macOS it would shadow Xcode's cc/c++; use Xcode or a development shell.
+        gcc
         # Headless virtual GUI over SSH; no desktop environment or display manager.
         xpra
         xterm
