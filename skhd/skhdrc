@@ -71,65 +71,7 @@ alt + shift - 0x29      : yabai -m space --balance >/dev/null 2>&1
 alt + shift - f         : yabai -m window --toggle zoom-fullscreen >/dev/null 2>&1
 alt + shift - backspace : yabai -m window --close >/dev/null 2>&1
 
-# Marks, like vim's m and '. Alt-Shift-M then a letter marks the focused window;
-# Alt-' then a letter jumps back to it, or to its app if the window has closed.
-# Release Alt before the letter. Esc cancels; other keys are ignored until then.
-# skhd cannot switch modes and run a command in one binding, so each command
-# synthesizes Esc to return to the default mode first.
-:: mark @
-:: jump @
-alt + shift - m ; mark
-alt - 0x27      ; jump
-mark, jump < escape ; default
-mark < a : skhd -k escape; ~/.config/skhd/mark set a
-mark < b : skhd -k escape; ~/.config/skhd/mark set b
-mark < c : skhd -k escape; ~/.config/skhd/mark set c
-mark < d : skhd -k escape; ~/.config/skhd/mark set d
-mark < e : skhd -k escape; ~/.config/skhd/mark set e
-mark < f : skhd -k escape; ~/.config/skhd/mark set f
-mark < g : skhd -k escape; ~/.config/skhd/mark set g
-mark < h : skhd -k escape; ~/.config/skhd/mark set h
-mark < i : skhd -k escape; ~/.config/skhd/mark set i
-mark < j : skhd -k escape; ~/.config/skhd/mark set j
-mark < k : skhd -k escape; ~/.config/skhd/mark set k
-mark < l : skhd -k escape; ~/.config/skhd/mark set l
-mark < m : skhd -k escape; ~/.config/skhd/mark set m
-mark < n : skhd -k escape; ~/.config/skhd/mark set n
-mark < o : skhd -k escape; ~/.config/skhd/mark set o
-mark < p : skhd -k escape; ~/.config/skhd/mark set p
-mark < q : skhd -k escape; ~/.config/skhd/mark set q
-mark < r : skhd -k escape; ~/.config/skhd/mark set r
-mark < s : skhd -k escape; ~/.config/skhd/mark set s
-mark < t : skhd -k escape; ~/.config/skhd/mark set t
-mark < u : skhd -k escape; ~/.config/skhd/mark set u
-mark < v : skhd -k escape; ~/.config/skhd/mark set v
-mark < w : skhd -k escape; ~/.config/skhd/mark set w
-mark < x : skhd -k escape; ~/.config/skhd/mark set x
-mark < y : skhd -k escape; ~/.config/skhd/mark set y
-mark < z : skhd -k escape; ~/.config/skhd/mark set z
-jump < a : skhd -k escape; ~/.config/skhd/mark jump a
-jump < b : skhd -k escape; ~/.config/skhd/mark jump b
-jump < c : skhd -k escape; ~/.config/skhd/mark jump c
-jump < d : skhd -k escape; ~/.config/skhd/mark jump d
-jump < e : skhd -k escape; ~/.config/skhd/mark jump e
-jump < f : skhd -k escape; ~/.config/skhd/mark jump f
-jump < g : skhd -k escape; ~/.config/skhd/mark jump g
-jump < h : skhd -k escape; ~/.config/skhd/mark jump h
-jump < i : skhd -k escape; ~/.config/skhd/mark jump i
-jump < j : skhd -k escape; ~/.config/skhd/mark jump j
-jump < k : skhd -k escape; ~/.config/skhd/mark jump k
-jump < l : skhd -k escape; ~/.config/skhd/mark jump l
-jump < m : skhd -k escape; ~/.config/skhd/mark jump m
-jump < n : skhd -k escape; ~/.config/skhd/mark jump n
-jump < o : skhd -k escape; ~/.config/skhd/mark jump o
-jump < p : skhd -k escape; ~/.config/skhd/mark jump p
-jump < q : skhd -k escape; ~/.config/skhd/mark jump q
-jump < r : skhd -k escape; ~/.config/skhd/mark jump r
-jump < s : skhd -k escape; ~/.config/skhd/mark jump s
-jump < t : skhd -k escape; ~/.config/skhd/mark jump t
-jump < u : skhd -k escape; ~/.config/skhd/mark jump u
-jump < v : skhd -k escape; ~/.config/skhd/mark jump v
-jump < w : skhd -k escape; ~/.config/skhd/mark jump w
-jump < x : skhd -k escape; ~/.config/skhd/mark jump x
-jump < y : skhd -k escape; ~/.config/skhd/mark jump y
-jump < z : skhd -k escape; ~/.config/skhd/mark jump z
+# One-off app mark. Alt-Shift-M remembers the focused app; Alt-' focuses it
+# the same way as the app keys above.
+alt + shift - m : ~/.config/skhd/mark set
+alt - 0x27      : ~/.config/skhd/mark jump
