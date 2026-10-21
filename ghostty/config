@@ -44,7 +44,13 @@ link-previews = true
 confirm-close-surface = false
 shell-integration-features = no-cursor,sudo,ssh-terminfo,ssh-env
 
-# Native pane resize. Ctrl-h/j/k/l is intentionally left to terminal applications.
+# Native pane navigation
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+keybind = ctrl+l=goto_split:right
+
+# Native pane resize
 keybind = ctrl+shift+h=resize_split:left,10
 keybind = ctrl+shift+j=resize_split:down,10
 keybind = ctrl+shift+k=resize_split:up,10
