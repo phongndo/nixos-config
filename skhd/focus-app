@@ -1,0 +1,53 @@
+#!/bin/bash
+# Focus an app's frontmost window on the current Space. If the app has no
+# window here, front it wherever it is; if it is not running, launch it.
+# usage: focus-app <bundle-id> [app-path]
+#   app-path: launch this bundle instead of the default for the bundle id.
+
+set -u
+
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  echo "usage: focus-app <bundle-id> [app-path]" >&2
+  exit 2
+fi
+
+bundle_id=$1
+app_path=${2:-}
+profile_bin="/etc/profiles/per-user/$USER/bin"
+
+launch() {
+  if [ -n "$app_path" ]; then
+    exec /usr/bin/open -a "$app_path"
+  fi
+  exec /usr/bin/open -b "$bundle_id"
+}
+
+# yabai lists the Space's windows front to back. Query it while LaunchServices
+# resolves the app's pid; jq reads the result from fd 3.
+exec 3< <("$profile_bin/yabai" -m query --windows \
+  id,pid,subrole,has-ax-reference,is-minimized,is-hidden --space 2>/dev/null)
+
+pid=$(/usr/bin/lsappinfo info -only pid "$bundle_id" 2>/dev/null)
+pid=${pid#*=}
+case $pid in
+  '' | *[!0-9]*) launch ;;
+esac
+
+window_id=$("$profile_bin/jq" -r --argjson pid "$pid" '
+  first(.[]
+    | select(.pid == $pid and .subrole == "AXStandardWindow" and ."has-ax-reference")
+    | select((."is-minimized" | not) and (."is-hidden" | not)))
+  | .id
+' <&3 2>/dev/null)
+
+if [ -n "$window_id" ] \
+  && "$profile_bin/yabai" -m window --focus "$window_id" >/dev/null 2>&1; then
+  exit 0
+fi
+
+# No usable window here: let LaunchServices front the app on its own Space.
+# Use a fresh lsappinfo client; a resident one coalesces rapid requestfront
+# calls and silently drops switches. Empty output means the app has quit.
+# shellcheck disable=SC2046 # Count the words of the printed ASN.
+set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$bundle_id" --immediate 2>/dev/null)
+[ "$#" -gt 0 ] || launch

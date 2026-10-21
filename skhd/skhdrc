@@ -2,6 +2,7 @@
 # App bindings focus/open the requested app only; no same-app window cycling.
 # Keep high-frequency yabai hotkeys direct and quiet. skhd already runs each
 # command through a shell; extra wrapper scripts and query+jq paths add latency.
+# App keys accept that cost (about 10 ms) to stay on the current Space.
 # In stack layout, use alt-tab/shift-alt-tab to move within the stack.
 # Alt-h/j/k/l is reserved for terminal applications such as Frame.
 
@@ -49,20 +50,18 @@ alt + shift - 0x18 : yabai -m window --ratio rel:0.05 >/dev/null 2>&1
 # Opt the focused window into/out of tiling.
 alt + shift - space : yabai -m window --toggle float >/dev/null 2>&1
 
-# App-first jumps. Start a fresh LaunchServices request for every keypress.
-# A resident lsappinfo client is a few milliseconds faster in isolation, but it
-# coalesces rapid requestfront commands and silently drops switches. The command
-# prints the running app's ASN; an empty result means the app needs launching.
-alt - 0x29      : app=com.superlogical.rex; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - c         : app=com.openai.codex; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - f         : app=net.imput.helium; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - s         : app=com.tinyspeck.slackmacgap; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - t         : app=com.t3tools.t3code; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -a '/Applications/T3 Code (Nightly).app'
-alt - p         : app=com.spotify.client; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - m         : app=com.apple.MobileSMS; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - e         : app=com.apple.finder; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - i         : app=com.fastmail.mac.Fastmail; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
-alt - o         : app=md.obsidian; set -- $(/usr/bin/lsappinfo -q -nonames requestfront "$app" --immediate 2>/dev/null); [ "$#" -gt 0 ] || exec /usr/bin/open -b "$app"
+# App-first jumps. Focus the app's frontmost window on the current Space; with
+# no window here, front the app wherever it is, or launch it.
+alt - 0x29      : ~/.config/skhd/focus-app com.superlogical.rex
+alt - c         : ~/.config/skhd/focus-app com.openai.codex
+alt - f         : ~/.config/skhd/focus-app net.imput.helium
+alt - s         : ~/.config/skhd/focus-app com.tinyspeck.slackmacgap
+alt - t         : ~/.config/skhd/focus-app com.t3tools.t3code '/Applications/T3 Code (Nightly).app'
+alt - p         : ~/.config/skhd/focus-app com.spotify.client
+alt - m         : ~/.config/skhd/focus-app com.apple.MobileSMS
+alt - e         : ~/.config/skhd/focus-app com.apple.finder
+alt - i         : ~/.config/skhd/focus-app com.fastmail.mac.Fastmail
+alt - o         : ~/.config/skhd/focus-app md.obsidian
 
 # Fast previous-app toggle.
 alt - q : set -- $(/usr/bin/lsappinfo -nonames visibleProcessList 2>/dev/null); [ $# -ge 2 ] && /usr/bin/lsappinfo requestfront "$2" --immediate >/dev/null 2>&1
@@ -71,3 +70,4 @@ alt - q : set -- $(/usr/bin/lsappinfo -nonames visibleProcessList 2>/dev/null); 
 alt + shift - 0x29      : yabai -m space --balance >/dev/null 2>&1
 alt + shift - f         : yabai -m window --toggle zoom-fullscreen >/dev/null 2>&1
 alt + shift - backspace : yabai -m window --close >/dev/null 2>&1
+
