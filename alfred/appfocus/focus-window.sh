@@ -11,6 +11,24 @@ if [[ -z "$bundle_id" ]]; then
   exit 2
 fi
 
+# Succeed only when the window actually has focus afterwards. A property query
+# keeps the check to one yabai call without starting jq.
+focus_window() {
+  $yabai_bin -m window --focus "$1" >/dev/null 2>&1 || return
+  [[ "$($yabai_bin -m query --windows has-focus --window "$1" 2>/dev/null)" == *'"has-focus":true'* ]]
+}
+
+# list-windows.sh passes the app's best window as item variables. Focusing it
+# directly skips a second LaunchServices and yabai lookup. Alfred may serve the
+# list from its cache, so a window that has since closed or changed falls
+# through to the full lookup below.
+if [[ "${best_window_id:-}" == <-> ]]; then
+  if [[ "${best_window_minimized:-}" == "true" ]]; then
+    $yabai_bin -m window "$best_window_id" --deminimize >/dev/null 2>&1 || true
+  fi
+  focus_window "$best_window_id" && exit 0
+fi
+
 # A bundle id is already a valid lsappinfo application specifier, so avoid a
 # separate `find` process before reading the pid.
 pid_output="$(/usr/bin/lsappinfo info -only pid "$bundle_id" 2>/dev/null)"
@@ -28,7 +46,8 @@ if ! windows_json="$($yabai_bin -m query --windows 2>/dev/null)"; then
 fi
 
 # Return only the three fields needed below; this avoids repeatedly launching
-# jq to unpack the selected window.
+# jq to unpack the selected window. Keep the ranking in sync with
+# list-windows.sh.
 window_fields="$(
   print -r -- "$windows_json" | $jq_bin -r --argjson pid "$app_pid" '
     [
@@ -65,14 +84,7 @@ if [[ "$window_minimized" == "true" ]]; then
   $yabai_bin -m window "$window_id" --deminimize >/dev/null 2>&1 || true
 fi
 
-if $yabai_bin -m window --focus "$window_id" >/dev/null 2>&1 \
-  && $yabai_bin -m query --windows --window "$window_id" \
-    | $jq_bin -e '."has-focus" == true' >/dev/null; then
-  exit 0
-fi
+focus_window "$window_id" && exit 0
 
 $yabai_bin -m space --focus "$window_space" >/dev/null 2>&1 || true
-$yabai_bin -m window --focus "$window_id" >/dev/null 2>&1 || true
-$yabai_bin -m query --windows --window "$window_id" \
-  | $jq_bin -e '."has-focus" == true' >/dev/null \
-  || /usr/bin/open -b "$bundle_id" >/dev/null 2>&1
+focus_window "$window_id" || /usr/bin/open -b "$bundle_id" >/dev/null 2>&1
