@@ -1,0 +1,56 @@
+#!/bin/bash
+# Window marks for skhd, like vim's m and '.
+# usage: mark set <a-z>   remember the focused window
+#        mark jump <a-z>  focus it again, or its app if the window has closed
+
+set -u
+
+usage() {
+  echo "usage: mark set|jump <a-z>" >&2
+  exit 2
+}
+
+[ "$#" -eq 2 ] || usage
+action=$1
+name=$2
+case $name in
+  [a-z]) ;;
+  *) usage ;;
+esac
+
+profile_bin="/etc/profiles/per-user/$USER/bin"
+yabai="$profile_bin/yabai"
+mark_file="${XDG_CACHE_HOME:-$HOME/.cache}/skhd/marks/$name"
+
+case $action in
+  set)
+    # Record the focused window and its app. Without a focused window (an app
+    # with no windows open), record the frontmost app alone.
+    read -r window_id pid < <("$yabai" -m query --windows id,pid --window 2>/dev/null \
+      | "$profile_bin/jq" -r '"\(.id) \(.pid)"' 2>/dev/null)
+    app=${pid:-$(/usr/bin/lsappinfo front)}
+    bundle_id=$(/usr/bin/lsappinfo info -only bundleid "$app" 2>/dev/null)
+    bundle_id=${bundle_id#*=\"}
+    bundle_id=${bundle_id%\"}
+    [ -n "$bundle_id" ] || exit 1
+
+    mkdir -p "${mark_file%/*}"
+    printf '%s\n%s\n' "${window_id:-}" "$bundle_id" >"$mark_file"
+    ;;
+  jump)
+    [ -r "$mark_file" ] || exit 0
+    { read -r window_id; read -r bundle_id; } <"$mark_file"
+
+    if [ -n "$window_id" ]; then
+      "$yabai" -m window --focus "$window_id" >/dev/null 2>&1 && exit 0
+      # A minimized window takes focus only after it is restored.
+      "$yabai" -m window "$window_id" --deminimize >/dev/null 2>&1 \
+        && "$yabai" -m window --focus "$window_id" >/dev/null 2>&1 \
+        && exit 0
+    fi
+    exec "${0%/*}/focus-app" "$bundle_id"
+    ;;
+  *)
+    usage
+    ;;
+esac

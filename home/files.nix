@@ -58,6 +58,7 @@ in
         "launchd/skhd-runner" = immutable ../launchd/skhd-runner;
         "launchd/yabai-runner" = immutable ../launchd/yabai-runner;
         "skhd/focus-app" = immutable ../skhd/focus-app;
+        "skhd/mark" = immutable ../skhd/mark;
         "skhd/skhdrc" = (immutable ../skhd/skhdrc) // {
           # skhd's watcher can miss Home Manager replacing a Nix-store symlink.
           # Reload after linking the new config; leave stopped daemons stopped.
