@@ -10,7 +10,6 @@ export PATH
 YABAI_BIN="${YABAI_BIN:-$USER_PROFILE/bin/yabai}"
 YABAI_CONFIG="$HOME/.config/yabai/yabairc"
 RETRY_DELAY="${RETRY_DELAY:-5}"
-STARTUP_DELAY="${STARTUP_DELAY:-8}"
 child=""
 
 log() {
@@ -30,13 +29,6 @@ terminate() {
 }
 
 trap terminate INT TERM
-
-if [ "${STARTUP_DELAY}" -gt 0 ] 2>/dev/null; then
-  sleep "${STARTUP_DELAY}" &
-  child=$!
-  wait "$child" || exit 0
-  child=""
-fi
 
 while :; do
   log "starting yabai"
