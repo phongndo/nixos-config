@@ -7,6 +7,8 @@ Both hosts use Nix's Zsh as the login shell. Home Manager owns its prompt and
 defers completion setup until the first Tab or Ctrl-T. Most shell integrations
 are generated during the Nix build; hz loads its installed version's integration
 at shell startup. Project `nix develop` shells keep their own PATH.
+Inside Rex, both shells put its `REX_BIN_DIR` first on PATH so the CLI matches
+the connected server on either host.
 
 ## Ownership
 

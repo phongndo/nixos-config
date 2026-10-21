@@ -9,6 +9,14 @@
 }:
 
 let
+  rexShellInit = ''
+    # Rex supplies its CLI directory separately from PATH. Restore it after
+    # shell setup so this works with local and remote Rex servers on any host.
+    if [[ -n "''${REX_BIN_DIR:-}" ]]; then
+      export PATH="$REX_BIN_DIR:$PATH"
+    fi
+  '';
+
   mkShellInit =
     name: command:
     pkgs.runCommand name { } ''
@@ -198,6 +206,7 @@ in
             source ${atuinZshInit}
           fi
         '')
+        (lib.mkOrder 2000 rexShellInit)
       ];
     };
 
@@ -260,6 +269,7 @@ in
             source ${starshipBashInit}
           fi
         '')
+        (lib.mkOrder 2000 rexShellInit)
       ];
     };
 
