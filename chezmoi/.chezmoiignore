@@ -49,6 +49,10 @@ herdr-tui-session.js
 .claude/telemetry/**
 .claude/todos/**
 
+# fx discovers shared skills in Codex/Claude; its MCP file is reconciled by
+# sync-agent-mcp, and its remaining files are local runtime state.
+.fx/**
+
 # Only Linux needs the wrapper for its local Executor installation.
 {{ if ne .chezmoi.os "linux" }}
 .local/bin/executor-mcp

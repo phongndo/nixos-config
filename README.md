@@ -42,9 +42,20 @@ Keep credentials, OAuth state, databases, and machine SSH keys outside this
 repository. Skill sync reads the separate `~/code/pi-extensions` checkout;
 its source and destinations are declared in
 `chezmoi/dot_config/agent-skills/targets.json`.
+fx discovers those distributed skills directly from the Codex and Claude
+skill folders, so it needs no separate skill copy or sync target.
 
-`sync-agent-mcp` configures each agent's host-local Executor connection. Pi uses
-its built-in MCP support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
+`sync-agent-mcp` configures Pi, Codex, and fx with each host's local Executor
+connection. It also adds Rex's [community MCP](https://www.superlogical.com/rex/docs/beta/community-mcp)
+as `superlogical` in Pi, Codex, Claude Code, OpenCode, and fx on both hosts.
+Sign in with Discord separately in each harness: `pi mcp login superlogical`,
+`codex mcp login superlogical`, `claude mcp login superlogical`,
+`opencode mcp auth superlogical`, or `fx mcp auth superlogical`.
+OpenCode's managed entry lives in `~/.config/opencode/opencode.json`, which
+merges with its local `opencode.jsonc`; run `opencode reload` for an existing
+server. fx uses `~/.fx/mcp.json`;
+`/mcp reload` applies changes in a running session. Pi uses its built-in MCP
+support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
 Sync preserves Pi's enable/disable and tool-exposure choices. Executor defaults
 to direct exposure because it already provides tool discovery and sandboxed
 execution. Integration credentials stay in Executor's local store.

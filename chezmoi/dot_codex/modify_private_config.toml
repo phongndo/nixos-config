@@ -1,5 +1,5 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Codex owns local trust/runtime state; sync-agent-mcp owns Executor.
+{{- /* Codex owns local trust/runtime state; sync-agent-mcp owns managed MCP connections.
       Merge shared settings instead of replacing either writer's additions.
       Keep the original text when unchanged to avoid formatting churn. */ -}}
 {{- $current := .chezmoi.stdin | fromToml -}}
