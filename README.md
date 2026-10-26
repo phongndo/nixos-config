@@ -107,15 +107,19 @@ Immich needs `/var/lib/immich/.env` with mode `0600`, based on
 on the machine and is not restored by a Nix rebuild.
 
 Rex runs on z as dp's Home Manager user service, kept running at boot by the
-account's linger setting. Connect from y with `rex -S http://z:7297 ls`;
-the listener uses z's Tailscale identity and admits its owner. Check it on z
+account's linger setting. In Rex on y, add `http://100.122.138.125:7297` as
+the remote host named `z`; the same address works with `rex -S` on the CLI.
+Use the Tailscale IPv4 address to avoid Rex's
+[hostname/IPv6 terminal-loading bug](https://discord.com/channels/1546797889009881158/1564343288335564820)
+(verified with build 1494 on 2026-10-26).
+The listener uses z's Tailscale identity and admits its owner. Check it on z
 with `systemctl --user status rex` or `journalctl --user -u rex`.
 The [Rex package token](https://www.superlogical.com/rex/docs/linux/installation#nix-and-nixos)
 is provisioned separately in `/etc/determinate/rex.netrc`, owned by dp with
 mode `0600`, so both user-side flake downloads and root builds can read it.
 NixOS declares Nix's reference to it; z doesn't run Determinate's authentication
-helper. Update the pinned
-snapshot with `nix flake update rex`, then rebuild z.
+helper. The Rex input follows the Preview channel. Update its pinned release
+with `nix flake update rex`, then rebuild z.
 
 z's resource policy lives in `machines/nixos/default.nix`: it bounds Nix build
 concurrency, gives builds and T3 workers separate memory budgets, and enables
