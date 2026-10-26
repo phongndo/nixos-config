@@ -50,6 +50,11 @@
     # because NixOS owns nix.conf instead of the Determinate installer.
     eval-cores = 0;
     lazy-trees = true;
+
+    # NixOS runs the Nix binary without Determinate's netrc-merging helper.
+    # Provision this file separately, owned by dp with mode 0600, for both
+    # user-side flake downloads and root's Nix daemon.
+    netrc-file = "/etc/determinate/rex.netrc";
   };
 
   # Compress cold pages during bursts; this is capacity, not reserved RAM.
@@ -129,10 +134,11 @@
     };
   };
 
-  # SSH/SFTP and Tailscale Serve HTTPS are private to the tailnet.
+  # SSH/SFTP, Tailscale Serve HTTPS, and Rex are private to the tailnet.
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
     22
     443
+    7297
   ];
 
   # The recording service reads these separately from the interactive atoprc.

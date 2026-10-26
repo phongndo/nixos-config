@@ -10,6 +10,11 @@
       inputs.nixpkgs.url = "github:NixOS/nixpkgs/c5c4a43b0e8056328ec4529f735cabdb8f1942bb";
     };
 
+    rex = {
+      url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,6 +33,7 @@
       nixpkgs,
       nixpkgs-unstable,
       determinate-nix,
+      rex,
       home-manager,
       nix-darwin,
       ...
@@ -60,6 +66,15 @@
             # Keep Nix managed by NixOS while replacing only its package with
             # the pinned Determinate distribution and matching dependencies.
             nix.package = determinate-nix.packages.${linuxSystem}.default;
+
+            home-manager.users.dp = {
+              imports = [ rex.homeManagerModules.default ];
+              services.rex = {
+                enable = true;
+                # Use z's existing tailnet identity; Rex admits its owner.
+                extraListen = [ "tailnet://:7297" ];
+              };
+            };
           }
         ];
       };
