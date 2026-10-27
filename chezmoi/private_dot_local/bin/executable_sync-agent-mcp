@@ -42,13 +42,12 @@ def pi_config(text, entry):
     # Migrate the custom extension's toggle once; native Pi owns enabled from here on.
     if "disabled" in executor:
         executor["enabled"] = not executor.pop("disabled")
-    # Replace the managed connection, not Pi's mutable exposure/toggle/timeout settings.
+    # Preserve Pi's toggle, per-tool restrictions, and timeout settings.
     for key in ("type", "env", "cwd", "url", "headers", "oauth"):
         executor.pop(key, None)
     executor.update(entry)
-    # Executor already provides discovery and sandboxed execution; avoid nesting it
-    # behind Pi's codemode by default. Preserve later choices made through /mcp.
-    executor.setdefault("exposure", "direct")
+    # Code-mode exposure is managed policy; per-tool restrictions still apply.
+    executor["exposure"] = "codemode"
     servers["executor"] = executor
     radius = dict(servers.get("radius", {}))
     radius["url"] = RADIUS_URL
@@ -86,6 +85,36 @@ def json_executor_config(text, entry, key="mcpServers", transport="stdio", comma
     if text.strip() and json.loads(text) == data:
         return text
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+def opencode_config(text, entry, add_executor=True):
+    data = json.loads(text) if text.strip() else {}
+    mcp = data.get("mcp", {})
+    servers = mcp.get("servers", {})
+    legacy = mcp.get("executor")
+    current = servers.get("executor")
+    if legacy is not None and current is not None and legacy != current:
+        raise ValueError("conflicting flat and nested OpenCode executor entries; no files changed")
+    if legacy is None and current is None and not add_executor:
+        return text
+    executor = dict(current if current is not None else legacy or {})
+    # OpenCode v2 reads servers under mcp.servers. Migrate only our managed
+    # entry; other servers and the global mcp.timeout remain untouched.
+    data.setdefault("mcp", mcp)
+    mcp.setdefault("servers", servers)
+    mcp.pop("executor", None)
+    if "enabled" in executor:
+        executor.setdefault("disabled", not executor.pop("enabled"))
+    timeout = executor.get("timeout")
+    if isinstance(timeout, (int, float)) and not isinstance(timeout, bool):
+        # This is the mapping in OpenCode's v1 -> v2 migration guide.
+        executor["timeout"] = {"catalog": timeout, "execution": timeout}
+    executor["codemode"] = True
+    servers["executor"] = executor
+    result = json_executor_config(json.dumps(data), entry, "mcp", "local", command_list=True)
+    if text.strip() and json.loads(text) == json.loads(result):
+        return text
+    return result
 
 
 def toml_value(value):
@@ -165,7 +194,7 @@ def plan(home, platform="linux"):
     # OpenCode merges .json and .jsonc. Update a legacy executor entry in a
     # plain-JSON .jsonc too, since it takes precedence over the managed .json.
     patch(".config/opencode/opencode.json", lambda old: remove_rex_community(
-        json_executor_config(old, stdio, "mcp", "local", command_list=True), "mcp",
+        opencode_config(old, stdio), "mcp",
     ))
     legacy = home / ".config/opencode/opencode.jsonc"
     if legacy.exists():
@@ -178,11 +207,8 @@ def plan(home, platform="linux"):
             if re.search(r'"executor"\s*:', text) or RETIRED_REX_COMMUNITY_URL in text:
                 raise ValueError(f"{legacy}: move managed MCP entries to opencode.json before syncing")
         else:
-            servers = data.get("mcp", {})
-            servers = servers.get("servers", servers)
             def migrate_legacy(old):
-                if "executor" in servers:
-                    old = json_executor_config(old, stdio, "mcp", "local", command_list=True)
+                old = opencode_config(old, stdio, add_executor=False)
                 return remove_rex_community(old, "mcp")
             patch(".config/opencode/opencode.jsonc", migrate_legacy)
     return changes

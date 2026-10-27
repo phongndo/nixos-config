@@ -55,6 +55,16 @@ catalog or depends on the other being awake. Executor's approval
 rules and each provider's authorization still apply. Google is excluded from
 this setup; Fastmail supplies email and calendar.
 
+Executor service actions use code mode. The shared bridge filters its direct
+`call` tool, leaving `skills`, `search`, `describe`, `execute`, and `resume`.
+Pi exposes Executor through its native `codemode`; OpenCode sets the server's
+`codemode: true`. Codex enables its documented, experimental
+`features.code_mode.enabled` setting, which applies globally to its tools.
+Claude Code and fx use Executor's own `execute` runtime; they have no equivalent
+native code-mode switch. Existing tool restrictions and approval rules still apply.
+Claude Code's denylist excludes the inherited `claude.ai Executor` connection
+so it uses the managed bridge. This leaves the Claude chat connector connected.
+
 The client saves its own sign-in in `~/.mcp-auth` on each host, outside Git.
 Run `~/.local/bin/executor-mcp --login` to sign in or check the connection.
 For remote sign-in on z, temporarily forward its callback with
@@ -80,6 +90,8 @@ does not configure. Connect them separately to the same Executor workspace;
 uses `https://mcp.executor.sh/mcp` and follows the Claude account across its web
 and desktop apps. This is separate from the
 managed Claude Code configuration above.
+These cloud connectors support Executor's `execute`, but local configuration
+does not force their tool presentation or filter their direct `call` tool.
 
 The local Executor server and desktop app are not required. The shared
 `mcp-remote` client remains necessary on both hosts to connect stdio harnesses
@@ -103,15 +115,16 @@ on each host. Provider credentials remain in Pi's local auth store, outside Git;
 declaring the MCP endpoint does not sign the host in.
 
 OpenCode's managed entry lives in `~/.config/opencode/opencode.json`.
-Sync also updates an older plain-JSON `opencode.jsonc` executor override so it
-cannot keep launching the old transport. Commented settings are preserved;
+Sync migrates the managed Executor entry to OpenCode v2's `mcp.servers` format,
+including an older plain-JSON `opencode.jsonc` override. The migration preserves
+the enabled state as `disabled` and maps a numeric timeout to catalog/execution
+timeouts. Commented settings are preserved;
 if they contain an executor override, move that entry to the managed `.json`
 file before syncing. Run `opencode reload` for an existing server. fx uses `~/.fx/mcp.json`;
 `/mcp reload` applies changes in a running session. Pi uses its built-in MCP
 support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
-Sync preserves Pi's enable/disable and tool-exposure choices. Executor defaults
-to direct exposure because it already provides tool discovery and sandboxed
-execution.
+Sync preserves Pi's enable/disable state and per-tool restrictions while managing
+Executor's server exposure as `codemode`.
 Codex-hosted plugin accounts need independent provider
 authorization before their tools can appear in Executor; installing a Codex
 plugin does not transfer its credentials.

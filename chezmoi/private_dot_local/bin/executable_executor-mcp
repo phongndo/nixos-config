@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # All agents use the same Executor Cloud workspace. OAuth client credentials
 # stay in mcp-remote's local store; provider credentials stay in Executor Cloud.
+# Service actions use execute; discovery and approval/resume tools stay available.
 set -euo pipefail
 umask 077
 client=mcp-remote
@@ -15,4 +16,4 @@ else
 fi
 exec "/etc/profiles/per-user/$(id -un)/bin/mise" -C "$HOME" exec -- \
   "$client" https://mcp.executor.sh/mcp "${callback[@]}" \
-  --transport http-only --auth-timeout 900 "$@"
+  --transport http-only --auth-timeout 900 --ignore-tool call "$@"

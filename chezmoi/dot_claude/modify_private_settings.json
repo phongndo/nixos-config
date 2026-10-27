@@ -5,6 +5,19 @@
 {{- $merged := mustMergeOverwrite (dict "effortLevel" "high" "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
 {{- $_ := set $merged "autoMemoryEnabled" false -}}
 {{- $_ := set $merged "attribution" (dict "commit" "" "pr" "") -}}
+{{- /* Use the managed code-mode bridge in Claude Code, while leaving the
+      account-level Executor connector available to Claude chat. */ -}}
+{{- $denied := get $merged "deniedMcpServers" | default (list) -}}
+{{- $hasExecutor := false -}}
+{{- range $denied -}}
+{{- if eq (get . "serverName") "claude.ai Executor" -}}
+{{- $hasExecutor = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $hasExecutor -}}
+{{- $denied = append $denied (dict "serverName" "claude.ai Executor") -}}
+{{- end -}}
+{{- $_ := set $merged "deniedMcpServers" $denied -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}
