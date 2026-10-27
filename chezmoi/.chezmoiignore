@@ -53,13 +53,13 @@ herdr-tui-session.js
 # sync-agent-mcp, and its remaining files are local runtime state.
 .fx/**
 
-# Only Linux needs the wrapper for its local Executor installation.
-{{ if ne .chezmoi.os "linux" }}
-.local/bin/executor-mcp
-{{ end }}
-
 # Machine keys are provisioned directly, never committed or synced.
 .ssh/id_*
+
+# Linux uses the Rex CLI from its Nix package; only macOS needs the app wrapper.
+{{ if ne .chezmoi.os "darwin" }}
+.local/bin/rex
+{{ end }}
 
 # Retired agent state must not be re-imported into the source tree.
 .dsh/**

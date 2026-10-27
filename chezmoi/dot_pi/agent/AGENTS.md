@@ -20,6 +20,7 @@ I use Pi to think, learn, research, and build. Match the current intent rather t
 
 ## Environment
 
+- For third-party services, check Executor's connected accounts and tools first. Use direct plugins only when a required account, workspace, or capability is unavailable through Executor. Verify access before treating an installed integration as connected. Use Fastmail for email and calendar; do not add Google integrations.
 - My Mac uses **nix-darwin** and my Linux box uses **NixOS**, with configuration in `~/nix-config`. Confirm which host you’re operating on; paths and platform behavior differ.
 - Use the project’s declared tooling and environment. For a Nix development shell, use `nix develop -c <command>` rather than assuming dependencies are globally installed.
 - For a missing one-off tool, you can use `nix shell nixpkgs#<package> -c <command>` instead of treating the missing executable as a blocker or installing it permanently.

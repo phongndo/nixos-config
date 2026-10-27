@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Rex's bundled CLI is otherwise exposed only to terminals launched inside Rex.
+set -euo pipefail
+exec "/Applications/Rex Beta.app/Contents/Helpers/Rex Server.rex/Contents/MacOS/rex" "$@"

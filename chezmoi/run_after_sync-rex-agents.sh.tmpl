@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Let the installed Rex version own its skill and hook contents.
+set -euo pipefail
+{{ if eq .chezmoi.os "darwin" -}}
+rex_cli="$HOME/.local/bin/rex"
+rex_binary="/Applications/Rex Beta.app/Contents/Helpers/Rex Server.rex/Contents/MacOS/rex"
+{{ else -}}
+rex_cli="/etc/profiles/per-user/$(id -un)/bin/rex"
+rex_binary="$rex_cli"
+{{ end -}}
+if [[ ! -x "$rex_binary" ]]; then
+  printf '%s\n' 'Rex is not installed; agent setup will run on the next chezmoi apply.' >&2
+  exit 0
+fi
+exec "$rex_cli" skill setup --agent claude --agent codex --agent opencode --agent pi

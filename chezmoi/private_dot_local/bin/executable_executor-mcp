@@ -1,7 +1,18 @@
-#!/run/current-system/sw/bin/bash
-# Linux agents use this host's own Executor daemon and connection store.
-# mise supplies Node and the npm-installed executor even from a restricted PATH.
+#!/usr/bin/env bash
+# All agents use the same Executor Cloud workspace. OAuth client credentials
+# stay in mcp-remote's local store; provider credentials stay in Executor Cloud.
 set -euo pipefail
-exec "/etc/profiles/per-user/$(/run/current-system/sw/bin/id -un)/bin/mise" -C "$HOME" exec -- \
-  executor mcp --scope "$HOME/.executor" \
-  --no-artifacts --search-tools --elicitation-mode browser
+umask 077
+client=mcp-remote
+if [[ "${1:-}" == --login ]]; then
+  client=mcp-remote-client
+  shift
+fi
+if [[ "$(uname -s)" == Darwin ]]; then
+  callback=(3337)
+else
+  callback=(3338 --host 127.0.0.1)
+fi
+exec "/etc/profiles/per-user/$(id -un)/bin/mise" -C "$HOME" exec -- \
+  "$client" https://mcp.executor.sh/mcp "${callback[@]}" \
+  --transport http-only --auth-timeout 900 "$@"

@@ -14,14 +14,11 @@ python = "3.15"
 pi = "latest"
 "github:vercel-labs/fx" = "latest"
 node = "26"
+"npm:mcp-remote" = "latest"
 # Personal tools follow published releases independently of Nix.
 "github:phongndo/mark" = "latest"
 "github:phongndo/hz" = "latest"
 "github:phongndo/frame" = "latest"
 {{ if eq .chezmoi.os "darwin" -}}
 "github:phongndo/leetvim" = "latest"
-{{ end -}}
-{{ if eq .chezmoi.os "linux" -}}
-# macOS uses Executor.app.
-"npm:executor" = "latest"
 {{ end -}}

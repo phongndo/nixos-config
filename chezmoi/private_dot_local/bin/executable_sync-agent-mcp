@@ -2,9 +2,9 @@
 """Reconcile managed MCP entries for the agent harnesses on macOS and Linux.
 
 Called after chezmoi applies native configs.
-Executor uses each host's local stdio command and connection store.
-Superlogical provides Rex documentation and community search over HTTP.
-Credentials are never copied between machines.
+Executor uses the shared Cloud workspace through mcp-remote on each host.
+Radius is Pi-only; Rex control uses its separately installed CLI skill.
+Cloud client sign-ins stay local; provider accounts are held by Executor Cloud.
 Python 3.11+ is required.
 """
 import json
@@ -16,21 +16,20 @@ import tempfile
 import tomllib
 
 
-SUPERLOGICAL_URL = "https://www.superlogical.com/rex/community-mcp"
+RETIRED_REX_COMMUNITY_URL = "https://www.superlogical.com/rex/community-mcp"
+RADIUS_URL = "https://radius.pi.dev/mcp"
 
 
-def remote_config(text, key="mcpServers", transport=None):
+def remove_rex_community(text, key="mcpServers"):
     data = json.loads(text) if text.strip() else {}
-    servers = data.setdefault(key, {})
-    if transport == "remote" and "servers" in servers:
-        servers = servers["servers"]
-    server = dict(servers.get("superlogical", {}))
-    for field in ("type", "command", "args", "env", "environment", "cwd"):
-        server.pop(field, None)
-    server["url"] = SUPERLOGICAL_URL
-    if transport:
-        server["type"] = transport
-    servers["superlogical"] = server
+    # Remove only the community endpoint we previously installed. A custom
+    # server using the same name belongs to the user. Include legacy maps so
+    # an old entry cannot override or resurrect the retired connection.
+    for map_key in {key, "mcpServers"}:
+        servers = data.get(map_key, {})
+        for mapping in (servers, servers.get("servers", {})):
+            if mapping.get("superlogical", {}).get("url") == RETIRED_REX_COMMUNITY_URL:
+                del mapping["superlogical"]
     if text.strip() and json.loads(text) == data:
         return text
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
@@ -51,6 +50,10 @@ def pi_config(text, entry):
     # behind Pi's codemode by default. Preserve later choices made through /mcp.
     executor.setdefault("exposure", "direct")
     servers["executor"] = executor
+    radius = dict(servers.get("radius", {}))
+    radius["url"] = RADIUS_URL
+    radius["auth"] = {**radius.get("auth", {}), "provider": "radius"}
+    servers["radius"] = radius
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
@@ -67,6 +70,24 @@ def fx_config(text, entry):
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
+def json_executor_config(text, entry, key="mcpServers", transport="stdio", command_list=False):
+    data = json.loads(text) if text.strip() else {}
+    servers = data.setdefault(key, {})
+    if command_list and "servers" in servers:
+        servers = servers["servers"]
+    executor = dict(servers.get("executor", {}))
+    for field in ("command", "args", "env", "environment", "cwd", "url", "headers", "oauth"):
+        executor.pop(field, None)
+    executor.update({"type": transport, **entry})
+    if command_list:
+        executor["command"] = [entry["command"], *entry.get("args", [])]
+        executor.pop("args", None)
+    servers["executor"] = executor
+    if text.strip() and json.loads(text) == data:
+        return text
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
 def toml_value(value):
     if isinstance(value, dict):
         return "{ " + ", ".join(
@@ -79,13 +100,22 @@ def toml_value(value):
 
 def toml_config(text, entry, name="executor"):
     before = tomllib.loads(text)
-    if name == "superlogical":
+    if entry is None:
+        if before.get("mcp_servers", {}).get(name, {}).get("url") != RETIRED_REX_COMMUNITY_URL:
+            return text
+    else:
         server = dict(before.get("mcp_servers", {}).get(name, {}))
-        for field in ("command", "args", "env", "env_vars", "cwd"):
+        for field in ("command", "args", "env", "env_vars", "cwd", "url", "http_headers", "env_http_headers", "bearer_token_env_var", "oauth"):
             server.pop(field, None)
         entry = {**server, **entry}
+    if before.get("mcp_servers", {}).get(name) == entry:
+        return text
     expected = dict(before)
-    expected["mcp_servers"] = {**before.get("mcp_servers", {}), name: entry}
+    expected["mcp_servers"] = dict(before.get("mcp_servers", {}))
+    if entry is None:
+        expected["mcp_servers"].pop(name)
+    else:
+        expected["mcp_servers"][name] = entry
     # Preserve all unrelated text, including comments and other servers.
     # Validation below refuses unusual table spellings/multiline TOML rather
     # than silently changing settings outside the managed server.
@@ -94,28 +124,23 @@ def toml_config(text, entry, name="executor"):
         rf"^[ \t]*\[\s*mcp_servers\.(?:{name}|\"{name}\"|'{name}')(?:\s*\]|\.)"
     )
     kept = "".join(s for s in sections if not server_table.match(s)).rstrip()
-    block = f"\n\n[mcp_servers.{name}]\n" + "".join(
+    block = "\n" if entry is None else f"\n\n[mcp_servers.{name}]\n" + "".join(
         f"{key} = {toml_value(value)}\n"
         for key, value in entry.items()
     )
     result = kept + block
-    if tomllib.loads(result) != expected:
+    parsed = tomllib.loads(result)
+    if not expected["mcp_servers"] and "mcp_servers" not in parsed:
+        expected.pop("mcp_servers")
+    if parsed != expected:
         raise ValueError(f"cannot safely replace mcp_servers.{name}; no files changed")
     return result
 
 
 def plan(home, platform="linux"):
-    if platform == "darwin":
-        # Without a scope, starting a daemon from a project can hide the shared
-        # connections behind a new workspace in the same database.
-        stdio = {
-            "command": "/Applications/Executor.app/Contents/Resources/executor/executor",
-            "args": ["mcp", "--scope", str(home / ".executor"), "--no-artifacts", "--search-tools", "--elicitation-mode", "browser"],
-        }
-    elif platform == "linux":
-        stdio = {"command": str(home / ".local/bin/executor-mcp"), "args": []}
-    else:
+    if platform not in ("darwin", "linux"):
         raise ValueError(f"unsupported platform: {platform}")
+    stdio = {"command": str(home / ".local/bin/executor-mcp"), "args": []}
     changes = {}
 
     def patch(relative, transform):
@@ -130,16 +155,36 @@ def plan(home, platform="linux"):
         if new != old:
             changes[path] = (old, new)
 
-    patch(".pi/agent/mcp.json", lambda old: remote_config(pi_config(old, stdio)))
+    patch(".pi/agent/mcp.json", lambda old: remove_rex_community(pi_config(old, stdio)))
     patch(".codex/config.toml", lambda old: toml_config(
         toml_config(old, {**stdio, "startup_timeout_sec": 30}),
-        {"url": SUPERLOGICAL_URL}, "superlogical",
+        None, "superlogical",
     ))
-    patch(".fx/mcp.json", lambda old: remote_config(fx_config(old, stdio), "mcp", "http"))
-    patch(".claude.json", lambda old: remote_config(old, transport="http"))
-    # OpenCode merges .json and .jsonc. Keep this managed entry separate from
-    # the user's commented configuration; both old and current schemas accept it.
-    patch(".config/opencode/opencode.json", lambda old: remote_config(old, "mcp", "remote"))
+    patch(".fx/mcp.json", lambda old: remove_rex_community(fx_config(old, stdio), "mcp"))
+    patch(".claude.json", lambda old: remove_rex_community(json_executor_config(old, stdio)))
+    # OpenCode merges .json and .jsonc. Update a legacy executor entry in a
+    # plain-JSON .jsonc too, since it takes precedence over the managed .json.
+    patch(".config/opencode/opencode.json", lambda old: remove_rex_community(
+        json_executor_config(old, stdio, "mcp", "local", command_list=True), "mcp",
+    ))
+    legacy = home / ".config/opencode/opencode.jsonc"
+    if legacy.exists():
+        text = legacy.read_text()
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            # Preserve ordinary commented settings. Do not silently leave a
+            # managed executor override on the previous transport.
+            if re.search(r'"executor"\s*:', text) or RETIRED_REX_COMMUNITY_URL in text:
+                raise ValueError(f"{legacy}: move managed MCP entries to opencode.json before syncing")
+        else:
+            servers = data.get("mcp", {})
+            servers = servers.get("servers", servers)
+            def migrate_legacy(old):
+                if "executor" in servers:
+                    old = json_executor_config(old, stdio, "mcp", "local", command_list=True)
+                return remove_rex_community(old, "mcp")
+            patch(".config/opencode/opencode.jsonc", migrate_legacy)
     return changes
 
 

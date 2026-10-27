@@ -47,20 +47,74 @@ its source and destinations are declared in
 fx discovers those distributed skills directly from the Codex and Claude
 skill folders, so it needs no separate skill copy or sync target.
 
-`sync-agent-mcp` configures Pi, Codex, and fx with each host's local Executor
-connection. It also adds Rex's [community MCP](https://www.superlogical.com/rex/docs/beta/community-mcp)
-as `superlogical` in Pi, Codex, Claude Code, OpenCode, and fx on both hosts.
-Sign in with Discord separately in each harness: `pi mcp login superlogical`,
-`codex mcp login superlogical`, `claude mcp login superlogical`,
-`opencode mcp auth superlogical`, or `fx mcp auth superlogical`.
-OpenCode's managed entry lives in `~/.config/opencode/opencode.json`, which
-merges with its local `opencode.jsonc`; run `opencode reload` for an existing
-server. fx uses `~/.fx/mcp.json`;
+`sync-agent-mcp` configures Pi, Codex, Claude Code, OpenCode, and fx with
+`~/.local/bin/executor-mcp`. The wrapper uses mise's `mcp-remote` client to reach
+Executor Cloud. Both machines use the personal `Me` workspace; connected provider
+accounts are available to every authorized agent. Neither machine hosts the
+catalog or depends on the other being awake. Executor's approval
+rules and each provider's authorization still apply. Google is excluded from
+this setup; Fastmail supplies email and calendar.
+
+The client saves its own sign-in in `~/.mcp-auth` on each host, outside Git.
+Run `~/.local/bin/executor-mcp --login` to sign in or check the connection.
+For remote sign-in on z, temporarily forward its callback with
+`ssh -L 3338:127.0.0.1:3338 z`, then run the login command on z and open its
+authorization link on y. The tunnel is needed only for browser sign-in.
+New agent sessions use the Cloud connection; reload an existing session's MCP
+connection after configuration changes.
+
+Manage service definitions and connected accounts in the
+[Executor workspace](https://app.executor.sh/org/me-9f65b0).
+A service being installed there does not mean its account is authorized.
+Connect every needed account or workspace through Executor's secure sign-in
+forms; do not copy credentials from Codex or local Executor databases.
+
+Executor is the primary shared layer. Keep native Figma and Atlassian connectors
+as fallbacks where vendor authorization or missing capabilities prevent a working
+Executor replacement. Remove a direct integration only after its replacement is
+verified for the required accounts and tools.
+
+ChatGPT and Claude web/Desktop use account-level connectors, which this sync
+does not configure. Connect them separately to the same Executor workspace;
+[Claude's remote connector](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
+uses `https://mcp.executor.sh/mcp` and follows the Claude account across its web
+and desktop apps. This is separate from the
+managed Claude Code configuration above.
+
+The local Executor server and desktop app are not required. The shared
+`mcp-remote` client remains necessary on both hosts to connect stdio harnesses
+to Cloud. Old private `~/.executor` data can be retained outside Git for recovery;
+Cloud does not read it. Fastmail's Cloud app supports an API token when its
+OAuth callback is refused.
+
+Rex app and terminal control uses its [official CLI skill](https://www.superlogical.com/rex/docs/automate/agent-skill).
+`run_after_sync-rex-agents.sh.tmpl` installs that skill for Pi, Codex, Claude Code,
+and OpenCode on both hosts; fx discovers the same skill through the shared
+Claude/agent directories. The installed Rex version supplies the guide and hooks.
+On y, `~/.local/bin/rex` exposes the Rex Beta app's bundled CLI outside Rex terminals;
+z uses its Nix-provided CLI. Check access with `rex whoami --json` and
+`rex client ls`; app actions require Rex's Remote Control setting.
+Rex currently provides no control MCP server. The sync removes the retired
+`superlogical` community endpoint, which only searched documentation and Discord.
+
+Radius is configured only for Pi on both hosts at `https://radius.pi.dev/mcp`,
+using Pi's `radius` authentication provider. Sign in with `/login radius` in Pi
+on each host. Provider credentials remain in Pi's local auth store, outside Git;
+declaring the MCP endpoint does not sign the host in.
+
+OpenCode's managed entry lives in `~/.config/opencode/opencode.json`.
+Sync also updates an older plain-JSON `opencode.jsonc` executor override so it
+cannot keep launching the old transport. Commented settings are preserved;
+if they contain an executor override, move that entry to the managed `.json`
+file before syncing. Run `opencode reload` for an existing server. fx uses `~/.fx/mcp.json`;
 `/mcp reload` applies changes in a running session. Pi uses its built-in MCP
 support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
 Sync preserves Pi's enable/disable and tool-exposure choices. Executor defaults
 to direct exposure because it already provides tool discovery and sandboxed
-execution. Integration credentials stay in Executor's local store.
+execution.
+Codex-hosted plugin accounts need independent provider
+authorization before their tools can appear in Executor; installing a Codex
+plugin does not transfer its credentials.
 
 ## Check and apply
 
