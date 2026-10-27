@@ -3,7 +3,7 @@
   lib,
   configurationName,
   rebuildCommand,
-  unstablePkgs,
+  # unstablePkgs,
   pkgs,
   ...
 }:
@@ -27,13 +27,16 @@ let
       ${command} > "$out"
     '';
 
-  atuinPtyZshInit = pkgs.runCommand "atuin-pty-zsh-init" { } ''
-    ${lib.getExe config.programs.atuin.package} pty-proxy init zsh \
-      | ${lib.getExe pkgs.gnused} 's|--shell "''${_atuin_pty_proxy_zsh#-}"|--shell "$(command -v zsh)"|' \
-      > "$out"
-  '';
-  atuinBashInit = mkShellInit "atuin-bash-init" "${lib.getExe config.programs.atuin.package} init bash";
-  atuinZshInit = mkShellInit "atuin-zsh-init" "${lib.getExe config.programs.atuin.package} init zsh";
+  # Atuin is disabled on both hosts; keep its setup for easy restoration.
+  /*
+    atuinPtyZshInit = pkgs.runCommand "atuin-pty-zsh-init" { } ''
+      ${lib.getExe config.programs.atuin.package} pty-proxy init zsh \
+        | ${lib.getExe pkgs.gnused} 's|--shell "''${_atuin_pty_proxy_zsh#-}"|--shell "$(command -v zsh)"|' \
+        > "$out"
+    '';
+    atuinBashInit = mkShellInit "atuin-bash-init" "${lib.getExe config.programs.atuin.package} init bash";
+    atuinZshInit = mkShellInit "atuin-zsh-init" "${lib.getExe config.programs.atuin.package} init zsh";
+  */
   starshipExe = lib.getExe config.programs.starship.package;
   starshipBashInit = pkgs.runCommand "starship-bash-init" { } ''
     export HOME="$TMPDIR/home"
@@ -102,13 +105,15 @@ in
       completionInit = "";
 
       initContent = lib.mkMerge [
-        (lib.mkBefore ''
-          # Run Atuin's PTY proxy before the regular shell integration so recent
-          # command output is available to Atuin AI through the daemon. Generate
-          # this static shell code at build time rather than on every startup.
-          # The patch works around atuin#3606 for SSH login shells.
-          source ${atuinPtyZshInit}
-        '')
+        /*
+          (lib.mkBefore ''
+            # Run Atuin's PTY proxy before the regular shell integration so recent
+            # command output is available to Atuin AI through the daemon. Generate
+            # this static shell code at build time rather than on every startup.
+            # The patch works around atuin#3606 for SSH login shells.
+            source ${atuinPtyZshInit}
+          '')
+        */
         (lib.mkOrder 900 ''
           # Home Manager creates the history parent on every startup. Its parent
           # already exists, so implement that one check with Zsh builtins.
@@ -174,8 +179,8 @@ in
               fi
               (( $+functions[__zoxide_z_complete] )) && compdef __zoxide_z_complete z
               (( $+functions[_hz_complete] )) && compdef _hz_complete hz _hz
-              # Lazy FZF initialization runs after Atuin. Keep Ctrl-R owned by
-              # Atuin and leave directory navigation to zoxide.
+              # Keep Ctrl-R on native history search and leave directory
+              # navigation to zoxide.
               local FZF_CTRL_R_COMMAND="" FZF_ALT_C_COMMAND=""
               source ${pkgs.fzf}/share/fzf/key-bindings.zsh
               source ${pkgs.fzf}/share/fzf/completion.zsh
@@ -195,17 +200,22 @@ in
             bindkey '^T' fzf-lazy-file-widget
             bindkey '^I' fzf-lazy-completion
             bindkey -r '^[c'
-
-            # Atuin accepts its compact 32-hex session ID. Generating it with
-            # shell randomness avoids launching the CLI solely for a UUID.
-            if [[ -z "''${ATUIN_SESSION:-}" || "''${ATUIN_SHLVL:-}" != "$SHLVL" ]]; then
-              printf -v ATUIN_SESSION '%04x%04x%04x%04x%04x%04x%04x%04x' \
-                $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM
-              export ATUIN_SESSION ATUIN_SHLVL=$SHLVL
-            fi
-            source ${atuinZshInit}
           fi
         '')
+        /*
+          (lib.mkAfter ''
+            if [[ $options[zle] = on ]]; then
+              # Atuin accepts its compact 32-hex session ID. Generating it with
+              # shell randomness avoids launching the CLI solely for a UUID.
+              if [[ -z "''${ATUIN_SESSION:-}" || "''${ATUIN_SHLVL:-}" != "$SHLVL" ]]; then
+                printf -v ATUIN_SESSION '%04x%04x%04x%04x%04x%04x%04x%04x' \
+                  $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM
+                export ATUIN_SESSION ATUIN_SHLVL=$SHLVL
+              fi
+              source ${atuinZshInit}
+            fi
+          '')
+        */
         (lib.mkOrder 2000 rexShellInit)
       ];
     };
@@ -257,84 +267,92 @@ in
             bind -m vi-insert '"\C-i": "\C-x\C-]\C-i"'
 
             source ${pkgs.bash-preexec}/share/bash/bash-preexec.sh
-            if [[ -z "''${ATUIN_SESSION:-}" || "''${ATUIN_SHLVL:-}" != "$SHLVL" ]]; then
-              printf -v ATUIN_SESSION '%04x%04x%04x%04x%04x%04x%04x%04x' \
-                $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM
-              export ATUIN_SESSION ATUIN_SHLVL=$SHLVL
-            fi
-            source ${atuinBashInit}
           fi
 
           if [[ $TERM != "dumb" ]]; then
             source ${starshipBashInit}
           fi
         '')
+        /*
+          (lib.mkAfter ''
+            if [[ :$SHELLOPTS: =~ :(vi|emacs): ]]; then
+              if [[ -z "''${ATUIN_SESSION:-}" || "''${ATUIN_SHLVL:-}" != "$SHLVL" ]]; then
+                printf -v ATUIN_SESSION '%04x%04x%04x%04x%04x%04x%04x%04x' \
+                  $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM $RANDOM
+                export ATUIN_SESSION ATUIN_SHLVL=$SHLVL
+              fi
+              source ${atuinBashInit}
+            fi
+          '')
+        */
         (lib.mkOrder 2000 rexShellInit)
       ];
     };
 
-    atuin = {
-      enable = true;
-      package = unstablePkgs.atuin;
-      # Static, build-time-generated integrations are sourced above.
-      enableBashIntegration = false;
-      enableZshIntegration = false;
+    /*
+      atuin = {
+        enable = true;
+        package = unstablePkgs.atuin;
+        # Static, build-time-generated integrations are sourced above.
+        enableBashIntegration = false;
+        enableZshIntegration = false;
 
-      # Keep Atuin's generated config fully declarative.
-      forceOverwriteSettings = true;
+        # Keep Atuin's generated config fully declarative.
+        forceOverwriteSettings = true;
 
-      settings = {
-        auto_sync = true;
-        sync_frequency = "5m";
-        search_mode = "daemon-fuzzy";
+        settings = {
+          auto_sync = true;
+          sync_frequency = "5m";
+          search_mode = "daemon-fuzzy";
 
-        # Give Atuin AI useful terminal context and access to its unique history
-        # features, but leave filesystem mutation and command execution to the
-        # dedicated coding agents.
-        ai = {
-          enabled = true;
-          yolo = false;
+          # Give Atuin AI useful terminal context and access to its unique history
+          # features, but leave filesystem mutation and command execution to the
+          # dedicated coding agents.
+          ai = {
+            enabled = true;
+            yolo = false;
 
-          opening = {
-            send_cwd = true;
-            send_last_command = true;
+            opening = {
+              send_cwd = true;
+              send_last_command = true;
+            };
+
+            capabilities = {
+              enable_history_search = true;
+              enable_history_output = true;
+              enable_file_tools = false;
+              enable_command_execution = false;
+            };
           };
 
-          capabilities = {
-            enable_history_search = true;
-            enable_history_output = true;
-            enable_file_tools = false;
-            enable_command_execution = false;
-          };
+          # Ctrl-R searches globally; up-arrow starts in the current directory.
+          filter_mode = "global";
+          filter_mode_shell_up_key_binding = "directory";
+          workspaces = true;
+
+          style = "compact";
+          inline_height = 20;
+          inline_height_shell_up_key_binding = 10;
+          show_preview = true;
+          max_preview_height = 4;
+
+          exit_mode = "return-query";
+          enter_accept = false;
+          keymap_mode = "auto";
+          secrets_filter = true;
+
+          # `pass show` can print credentials and command substitutions can embed
+          # secret-store paths. Keep all password-store invocations out of Atuin.
+          history_filter = [ "\\bpass\\b" ];
         };
 
-        # Ctrl-R searches globally; up-arrow starts in the current directory.
-        filter_mode = "global";
-        filter_mode_shell_up_key_binding = "directory";
-        workspaces = true;
-
-        style = "compact";
-        inline_height = 20;
-        inline_height_shell_up_key_binding = 10;
-        show_preview = true;
-        max_preview_height = 4;
-
-        exit_mode = "return-query";
-        enter_accept = false;
-        keymap_mode = "auto";
-        secrets_filter = true;
-
-        # `pass show` can print credentials and command substitutions can embed
-        # secret-store paths. Keep all password-store invocations out of Atuin.
-        history_filter = [ "\\bpass\\b" ];
+        # Home Manager manages the daemon as a launchd agent on macOS.
+        daemon = {
+          enable = true;
+          logLevel = "warn";
+        };
       };
-
-      # Home Manager manages the daemon as a launchd agent on macOS.
-      daemon = {
-        enable = true;
-        logLevel = "warn";
-      };
-    };
+    */
 
     # Both shells source build-time-generated Starship initialization above.
     starship = {

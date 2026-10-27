@@ -1,6 +1,6 @@
 {
   config,
-  lib,
+  # lib,
   pkgs,
   ...
 }:
@@ -8,14 +8,16 @@
 let
   home = config.home.homeDirectory;
 
-  atuinDaemon = pkgs.writeShellScript "atuin-daemon-start" ''
-    # An unclean shutdown can leave these generated files behind even though
-    # no daemon owns the socket. launchd guarantees this script has one active
-    # instance, so they are stale whenever it starts us.
-    rm -f "${config.xdg.dataHome}/atuin/daemon.sock" \
-      "${config.xdg.dataHome}/atuin/atuin-daemon.pid"
-    exec ${lib.getExe config.programs.atuin.package} daemon start
-  '';
+  /*
+    atuinDaemon = pkgs.writeShellScript "atuin-daemon-start" ''
+      # An unclean shutdown can leave these generated files behind even though
+      # no daemon owns the socket. launchd guarantees this script has one active
+      # instance, so they are stale whenever it starts us.
+      rm -f "${config.xdg.dataHome}/atuin/daemon.sock" \
+        "${config.xdg.dataHome}/atuin/atuin-daemon.pid"
+      exec ${lib.getExe config.programs.atuin.package} daemon start
+    '';
+  */
 
   agent = name: {
     enable = true;
@@ -74,7 +76,7 @@ in
   launchd.agents = {
     # Home Manager's Atuin module owns the rest of this agent. Override only
     # its executable so stale crash state cannot create a restart loop.
-    atuin-daemon.config.ProgramArguments = lib.mkForce [ "${atuinDaemon}" ];
+    # atuin-daemon.config.ProgramArguments = lib.mkForce [ "${atuinDaemon}" ];
 
     yabai = agent "yabai";
     skhd = agent "skhd";
