@@ -44,10 +44,8 @@ Keep credentials, OAuth state, databases, and machine SSH keys outside this
 repository. Skill sync reads the separate `~/code/pi-extensions` checkout;
 its source and destinations are declared in
 `chezmoi/dot_config/agent-skills/targets.json`.
-fx discovers those distributed skills directly from the Codex and Claude
-skill folders, so it needs no separate skill copy or sync target.
 
-`sync-agent-mcp` configures Pi, Codex, Claude Code, OpenCode, and fx with
+`sync-agent-mcp` configures Pi, Codex, Claude Code, and OpenCode with
 `~/.local/bin/executor-mcp`. The wrapper uses mise's `mcp-remote` client to reach
 Executor Cloud. Both machines use the personal `Me` workspace; connected provider
 accounts are available to every authorized agent. Neither machine hosts the
@@ -60,7 +58,7 @@ Executor service actions use code mode. The shared bridge filters its direct
 Pi exposes Executor through its native `codemode`; OpenCode sets the server's
 `codemode: true`. Codex enables its documented, experimental
 `features.code_mode.enabled` setting, which applies globally to its tools.
-Claude Code and fx use Executor's own `execute` runtime; they have no equivalent
+Claude Code uses Executor's own `execute` runtime; it has no equivalent
 native code-mode switch. Existing tool restrictions and approval rules still apply.
 Claude Code's denylist excludes the inherited `claude.ai Executor` connection
 so it uses the managed bridge. This leaves the Claude chat connector connected.
@@ -101,8 +99,7 @@ OAuth callback is refused.
 
 Rex app and terminal control uses its [official CLI skill](https://www.superlogical.com/rex/docs/automate/agent-skill).
 `run_after_sync-rex-agents.sh.tmpl` installs that skill for Pi, Codex, Claude Code,
-and OpenCode on both hosts; fx discovers the same skill through the shared
-Claude/agent directories. The installed Rex version supplies the guide and hooks.
+and OpenCode on both hosts. The installed Rex version supplies the guide and hooks.
 On y, `~/.local/bin/rex` exposes the Rex Beta app's bundled CLI outside Rex terminals;
 z uses its Nix-provided CLI. Check access with `rex whoami --json` and
 `rex client ls`; app actions require Rex's Remote Control setting.
@@ -120,8 +117,7 @@ including an older plain-JSON `opencode.jsonc` override. The migration preserves
 the enabled state as `disabled` and maps a numeric timeout to catalog/execution
 timeouts. Commented settings are preserved;
 if they contain an executor override, move that entry to the managed `.json`
-file before syncing. Run `opencode reload` for an existing server. fx uses `~/.fx/mcp.json`;
-`/mcp reload` applies changes in a running session. Pi uses its built-in MCP
+file before syncing. Run `opencode reload` for an existing server. Pi uses its built-in MCP
 support (0.99.0+) and `~/.pi/agent/mcp.json`; `/mcp` manages it.
 Sync preserves Pi's enable/disable state and per-tool restrictions while managing
 Executor's server exposure as `codemode`.

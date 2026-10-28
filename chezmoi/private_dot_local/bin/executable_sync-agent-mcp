@@ -56,19 +56,6 @@ def pi_config(text, entry):
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
-def fx_config(text, entry):
-    data = json.loads(text) if text.strip() else {}
-    # fx prefers mcp over its legacy mcpServers key. Carry legacy servers into
-    # the preferred map when adding it so they remain available.
-    servers = data.setdefault("mcp", dict(data.get("mcpServers", {})))
-    executor = dict(servers.get("executor", {}))
-    for key in ("env", "environment", "cwd", "url", "headers", "header_env", "bearer_token_env", "oauth"):
-        executor.pop(key, None)
-    executor.update({"type": "local", **entry})
-    servers["executor"] = executor
-    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-
-
 def json_executor_config(text, entry, key="mcpServers", transport="stdio", command_list=False):
     data = json.loads(text) if text.strip() else {}
     servers = data.setdefault(key, {})
@@ -189,7 +176,6 @@ def plan(home, platform="linux"):
         toml_config(old, {**stdio, "startup_timeout_sec": 30}),
         None, "superlogical",
     ))
-    patch(".fx/mcp.json", lambda old: remove_rex_community(fx_config(old, stdio), "mcp"))
     patch(".claude.json", lambda old: remove_rex_community(json_executor_config(old, stdio)))
     # OpenCode merges .json and .jsonc. Update a legacy executor entry in a
     # plain-JSON .jsonc too, since it takes precedence over the managed .json.

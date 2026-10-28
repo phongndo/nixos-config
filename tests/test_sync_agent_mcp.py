@@ -25,7 +25,6 @@ class RexCommunityRemovalTests(unittest.TestCase):
                 profiles = (
                     (".pi/agent/mcp.json", "mcpServers"),
                     (".claude.json", "mcpServers"),
-                    (".fx/mcp.json", "mcp"),
                     (".config/opencode/opencode.json", "mcp"),
                 )
                 for relative, key in profiles:
@@ -156,7 +155,6 @@ class RadiusConfigTests(unittest.TestCase):
                     "url": SYNC["RADIUS_URL"], "auth": {"provider": "radius"},
                 })
                 for relative, key in ((".claude.json", "mcpServers"),
-                                      (".fx/mcp.json", "mcp"),
                                       (".config/opencode/opencode.json", "mcp")):
                     data = json.loads((home / relative).read_text())
                     self.assertNotIn("radius", data[key])
@@ -211,55 +209,14 @@ class PiCodeModeTests(unittest.TestCase):
         })
 
 
-class FxMcpSyncTests(unittest.TestCase):
-    def test_new_profile_uses_fx_local_transport(self):
-        self.assertEqual(
-            json.loads(SYNC["fx_config"]("", ENTRY)),
-            {"mcp": {"executor": {"type": "local", **ENTRY}}},
-        )
-
-    def test_preserves_servers_and_user_controls_when_replacing_connection(self):
-        old = {
-            "custom_setting": True,
-            "mcp": {
-                "other": {"type": "http", "url": "https://example.test/mcp"},
-                "executor": {
-                    "type": "http", "url": "https://obsolete.test/mcp",
-                    "environment": {"OLD": "value"}, "headers": {"X-Old": "value"},
-                    "command": "old", "args": ["old"],
-                    "enabled": False, "required": True, "operation_timeout_ms": 90000,
-                },
-            },
-        }
-        result = json.loads(SYNC["fx_config"](json.dumps(old), ENTRY))
-        self.assertEqual(result["custom_setting"], old["custom_setting"])
-        self.assertEqual(result["mcp"]["other"], old["mcp"]["other"])
-        self.assertEqual(result["mcp"]["executor"], {
-            "type": "local", **ENTRY,
-            "enabled": False, "required": True, "operation_timeout_ms": 90000,
-        })
-
-    def test_legacy_servers_remain_visible_after_adding_preferred_map(self):
-        old = {"mcpServers": {"other": {"command": ["other-server"]}}}
-        result = json.loads(SYNC["fx_config"](json.dumps(old), ENTRY))
-        self.assertEqual(result["mcpServers"], old["mcpServers"])
-        self.assertEqual(result["mcp"]["other"], old["mcpServers"]["other"])
-
+class AgentMcpSyncTests(unittest.TestCase):
     def test_both_hosts_use_local_wrapper_and_sync_is_idempotent(self):
         for platform in ("darwin", "linux"):
             with self.subTest(platform=platform), tempfile.TemporaryDirectory() as directory:
                 home = Path(directory)
-                profile = home / ".fx/mcp.json"
-                profile.parent.mkdir()
-                old = '{"mcp":{"other":{"command":["other-server"]}}}\n'
-                profile.write_text(old)
                 with contextlib.redirect_stdout(io.StringIO()):
                     SYNC["apply"](home, platform)
-                executor = json.loads(profile.read_text())["mcp"]["executor"]
                 expected = str(home / ".local/bin/executor-mcp")
-                self.assertEqual(executor["command"], expected)
-                self.assertEqual(executor["type"], "local")
-                self.assertEqual(executor["args"], [])
                 pi = json.loads((home / ".pi/agent/mcp.json").read_text())
                 codex = tomllib.loads((home / ".codex/config.toml").read_text())
                 claude = json.loads((home / ".claude.json").read_text())
@@ -275,22 +232,24 @@ class FxMcpSyncTests(unittest.TestCase):
                 })
                 self.assertEqual(pi["mcpServers"]["executor"]["exposure"], "codemode")
                 self.assertEqual(SYNC["plan"](home, platform), {})
-                backup = home / ".local/state/executor-agent-config/backups/.fx/mcp.json"
-                self.assertEqual(backup.read_text(), old)
+                self.assertFalse((home / ".fx").exists())
 
-    def test_invalid_fx_profile_prevents_writes_to_other_agents(self):
-        with tempfile.TemporaryDirectory() as directory:
-            home = Path(directory)
-            profile = home / ".fx/mcp.json"
-            profile.parent.mkdir()
-            profile.write_text("{invalid")
-            with self.assertRaises(ValueError):
-                SYNC["apply"](home)
-            self.assertEqual(profile.read_text(), "{invalid")
-            self.assertFalse((home / ".pi").exists())
-            self.assertFalse((home / ".codex").exists())
+    def test_retired_fx_profile_is_not_read_or_modified(self):
+        for platform in ("darwin", "linux"):
+            for original in ('{"mcp":{"other":{"command":["other-server"]}}}\n', "{invalid"):
+                with self.subTest(platform=platform, original=original), tempfile.TemporaryDirectory() as directory:
+                    home = Path(directory)
+                    profile = home / ".fx/mcp.json"
+                    profile.parent.mkdir()
+                    profile.write_text(original)
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        SYNC["apply"](home, platform)
+                    self.assertEqual(profile.read_text(), original)
+                    self.assertTrue((home / ".pi/agent/mcp.json").exists())
+                    self.assertEqual(SYNC["plan"](home, platform), {})
+                    self.assertFalse((home / ".local/state/executor-agent-config/backups/.fx").exists())
 
-    def test_symlinked_fx_profile_is_preserved(self):
+    def test_retired_fx_symlink_is_untouched(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)
             target = home / "external.json"
@@ -298,11 +257,11 @@ class FxMcpSyncTests(unittest.TestCase):
             profile = home / ".fx/mcp.json"
             profile.parent.mkdir()
             profile.symlink_to(target)
-            with self.assertRaises(ValueError):
+            with contextlib.redirect_stdout(io.StringIO()):
                 SYNC["apply"](home)
             self.assertEqual(target.read_text(), "{}")
             self.assertTrue(profile.is_symlink())
-            self.assertFalse((home / ".pi").exists())
+            self.assertTrue((home / ".pi/agent/mcp.json").exists())
 
 
 class SharedExecutorConfigTests(unittest.TestCase):
