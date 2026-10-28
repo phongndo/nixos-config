@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+"""Reconcile selected Mark integrations after mise install (Python 3.11+).
+
+Native harnesses own their package caches and plugin settings. This script owns
+only the Mark registrations and, when fx is selected, its detached Mark skill.
+Credentials, sessions, other integrations, and disabled states stay local.
+"""
+import argparse
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import tomllib
+
+
+REPOSITORY = "phongndo/mark"
+MINIMUM = (0, 16, 0)
+TOOLS = {"pi": "pi", "opencode": "npm:@opencode/cli", "codex": "codex",
+         "claude": "claude", "fx": "github:vercel-labs/fx"}
+
+
+def version(value):
+    match = re.search(r"\b(\d+)\.(\d+)\.(\d+)\b", str(value))
+    return tuple(map(int, match.groups())) if match else (0, 0, 0)
+
+
+def no_links(path):
+    for part in (path, *path.parents):
+        if part.is_symlink():
+            raise ValueError(f"refusing symlink path: {part}")
+
+
+def read_json(path):
+    no_links(path)
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def atomic_write(path, data):
+    no_links(path)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as output:
+            output.write(data)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def json_bytes(value):
+    return (json.dumps(value, indent=2, ensure_ascii=False) + "\n").encode()
+
+
+def skill_files(root):
+    no_links(root)
+    result = {}
+    if root.exists():
+        for path in sorted(root.rglob("*")):
+            no_links(path)
+            if path.is_file():
+                result[path.relative_to(root).as_posix()] = path.read_bytes()
+            elif not path.is_dir():
+                raise ValueError(f"not a regular skill file: {path}")
+    return result
+
+
+def hashes(files):
+    return {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}
+
+
+def package_source(entry):
+    return entry.get("source", entry.get("package", "")) if isinstance(entry, dict) else entry
+
+
+def mark_package(entry, host):
+    source = package_source(entry)
+    if not isinstance(source, str):
+        return False
+    package = f"mark-{host}"
+    return (source.removeprefix("npm:").split("@", 1)[0] == package
+            or (source.rstrip("/").endswith(f"/{host}")
+                and ("/mark/integrations/" in source or f"/mark/assets/integrations/{host}" in source)))
+
+
+def public_repository(value):
+    return str(value).removeprefix("git+").removesuffix(".git").rstrip("/") in {
+        REPOSITORY, f"https://github.com/{REPOSITORY}", f"git@github.com:{REPOSITORY}",
+    }
+
+
+def native(argv, cwd, env):
+    result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=600)
+    if result.returncode:
+        raise RuntimeError(f"{' '.join(argv)} failed: {result.stderr.strip() or result.stdout.strip()}")
+    return result.stdout.strip()
+
+
+class Reconciler:
+    def __init__(self, home, check=False, mise="mise", runner=native):
+        self.home = home
+        self.check = check
+        self.mise = mise
+        self.runner = runner
+        self.changes = []
+        # Inventory must never auto-install another selected tool. Home Manager
+        # installs tools first; the one explicit upgrade below owns old Mark.
+        self.environment = {**os.environ, "MISE_AUTO_INSTALL": "false"}
+        self.cache = Path(os.environ.get("XDG_CACHE_HOME") or home / ".cache")
+        config = home / ".config/mise/config.toml"
+        self.tools = tomllib.loads(config.read_text()).get("tools", {}) if config.exists() else {}
+        self.mark_version = ""
+
+    def run(self, *args):
+        return self.runner([self.mise, "-C", str(self.home), "exec", "--", *args], cwd=self.home, env=self.environment)
+
+    def query(self, *args):
+        return json.loads(self.run(*args))
+
+    def change(self, label, action):
+        self.changes.append(label)
+        print(f"sync-mark-integrations: {'would ' if self.check else ''}{label}")
+        if not self.check:
+            action()
+
+    def available(self, tool):
+        if TOOLS[tool] not in self.tools:
+            print(f"sync-mark-integrations: skip {tool}: not selected in mise")
+            return False
+        try:
+            self.run(tool, "--version")
+        except (RuntimeError, OSError) as error:
+            raise ValueError(f"selected {tool} is unavailable; run mise install first") from error
+        return True
+
+    def ensure_mark(self):
+        try:
+            current = self.run("mark", "--version")
+        except (RuntimeError, OSError):
+            current = ""
+        if version(current) < MINIMUM:
+            self.change("upgrade Mark through mise (github:phongndo/mark)", lambda: self.runner(
+                [self.mise, "-C", str(self.home), "upgrade", "github:phongndo/mark"], cwd=self.home, env=self.environment))
+            if self.check:
+                return False
+            current = self.run("mark", "--version")
+        if version(current) < MINIMUM:
+            raise ValueError("Mark 0.16.0 or newer is required after mise upgrade")
+        self.mark_version = ".".join(map(str, version(current)))
+        return True
+
+    def package_current(self, path):
+        return version(read_json(path).get("version")) >= version(self.mark_version)
+
+    def pi(self):
+        settings = read_json(self.home / ".pi/agent/settings.json")
+        packages = settings.get("packages", [])
+        expected = "npm:mark-pi"
+        for entry in packages:
+            source = package_source(entry)
+            if mark_package(entry, "pi") and source != expected:
+                self.change(f"remove obsolete Pi Mark source {source}", lambda source=source: self.run("pi", "remove", source))
+        present = any(package_source(entry) == expected for entry in packages)
+        installed = self.home / ".pi/agent/npm/node_modules/mark-pi/package.json"
+        if not present or not installed.exists():
+            self.change("install Pi npm:mark-pi", lambda: self.run("pi", "install", expected))
+        elif not self.package_current(installed):
+            self.change("update Pi npm:mark-pi", lambda: self.run("pi", "update", expected))
+        if not self.check and not self.package_current(installed):
+            raise ValueError(f"Pi Mark package is older than Mark {self.mark_version} after native install/update")
+
+    def opencode(self):
+        config = read_json(self.home / ".config/opencode/opencode.json")
+        packages = config.get("plugins", [])
+        if not isinstance(packages, list):
+            raise ValueError("OpenCode plugins must be a list; existing settings preserved")
+        override = self.home / ".config/opencode/opencode.jsonc"
+        no_links(override)
+        if override.exists():
+            text = override.read_text()
+            try:
+                overridden = json.loads(text).get("plugins", [])
+            except json.JSONDecodeError:
+                overridden = ["mark-opencode"] if re.search(r'"plugins"\s*:', text) and (
+                    "mark-opencode" in text or "/mark/integrations/" in text) else []
+            if any(mark_package(entry, "opencode") for entry in overridden):
+                raise ValueError("move Mark plugins from opencode.jsonc to opencode.json before syncing; override preserved")
+        for entry in packages:
+            if mark_package(entry, "opencode") and entry != "mark-opencode":
+                if isinstance(entry, dict) and package_source(entry) == "mark-opencode":
+                    continue
+                if not isinstance(entry, str):
+                    raise ValueError("obsolete OpenCode Mark plugin has custom options; update its package field before syncing")
+                self.change(f"remove obsolete OpenCode Mark source {entry}", lambda entry=entry: self.run("opencode", "plugin", "remove", entry))
+        installed = list((self.cache / "opencode").glob(
+            "npm/mark-opencode@*/*/node_modules/mark-opencode/package.json"))
+        present = any(package_source(entry) == "mark-opencode" for entry in packages)
+        if not present:
+            self.change("install OpenCode mark-opencode", lambda: self.run("opencode", "plugin", "add", "mark-opencode"))
+        elif not any(self.package_current(path) for path in installed):
+            self.change("update OpenCode mark-opencode", lambda: self.run("opencode", "plugin", "update", "mark-opencode"))
+        if not self.check and not any(self.package_current(path) for path in (self.cache / "opencode").glob(
+                "npm/mark-opencode@*/*/node_modules/mark-opencode/package.json")):
+            raise ValueError(f"OpenCode Mark package is older than Mark {self.mark_version} after native install/update")
+
+    def codex_disabled(self):
+        """Restore a migrated user's disabled toggle without rewriting other TOML."""
+        path = self.home / ".codex/config.toml"
+        no_links(path)
+        old = path.read_text() if path.exists() else ""
+        before = tomllib.loads(old)
+        if before.get("plugins", {}).get("mark@mark", {}).get("enabled") is False:
+            return
+        expected = copy.deepcopy(before)
+        expected.setdefault("plugins", {}).setdefault("mark@mark", {})["enabled"] = False
+        # Try individual semantic changes, accepting only a parse that changes
+        # exactly our toggle. This also covers single quotes and inline tables.
+        candidates = []
+        for match in re.finditer(r'''(?:\benabled|"enabled"|'enabled')\s*=\s*true\b''', old):
+            candidates.append(old[:match.end() - 4] + "false" + old[match.end():])
+        for match in re.finditer(r'''(?m)^\s*\[\s*plugins\s*\.\s*(?:"mark@mark"|'mark@mark')\s*\][^\n]*(?:\n|$)''', old):
+            candidates.append(old[:match.end()] + "enabled = false\n" + old[match.end():])
+        candidates.append(old.rstrip() + '\n\n[plugins."mark@mark"]\nenabled = false\n')
+        for candidate in candidates:
+            try:
+                valid = tomllib.loads(candidate) == expected
+            except tomllib.TOMLDecodeError:
+                continue
+            if valid:
+                atomic_write(path, candidate.encode())
+                return
+        raise ValueError("cannot safely preserve disabled Codex Mark toggle; settings preserved")
+
+    def codex(self):
+        plugins = self.query("codex", "plugin", "list", "--json")["installed"]
+        marketplaces = self.query("codex", "plugin", "marketplace", "list", "--json")["marketplaces"]
+        market = next((x for x in marketplaces if x["name"] == "mark"), None)
+        path = self.home / ".codex/config.toml"
+        config = tomllib.loads(path.read_text()) if path.exists() else {}
+        source = config.get("marketplaces", {}).get("mark", {})
+        correct = (market is not None and source.get("source_type") == "git"
+                   and public_repository(source.get("source")) and source.get("ref") == "integrations")
+        current = next((x for x in plugins if x["pluginId"] == "mark@mark"), None)
+        legacy = next((x for x in plugins if x["pluginId"] == "mark@mark-local"), None)
+        disabled = (current or legacy or {}).get("enabled") is False
+        if market and not correct:
+            if any(x["marketplaceName"] == "mark" and x["name"] != "mark" for x in plugins):
+                raise ValueError("Codex marketplace mark contains unrelated plugins; not replacing it")
+            if current is not None:
+                self.change("remove Codex Mark from obsolete marketplace source", lambda: self.run("codex", "plugin", "remove", "mark@mark", "--json"))
+            self.change("replace Codex Mark marketplace source", lambda: self.run("codex", "plugin", "marketplace", "remove", "mark", "--json"))
+        if not correct:
+            self.change("add public Codex Mark marketplace", lambda: self.run("codex", "plugin", "marketplace", "add", REPOSITORY, "--ref", "integrations", "--json"))
+        if legacy:
+            self.change("remove Codex mark@mark-local duplicate", lambda: self.run("codex", "plugin", "remove", "mark@mark-local", "--json"))
+        if not correct or current is None or version(current.get("version")) < version(self.mark_version):
+            if correct and current is not None:
+                self.change("refresh public Codex Mark marketplace", lambda: self.run("codex", "plugin", "marketplace", "upgrade", "mark", "--json"))
+            self.change("install Codex mark@mark", lambda: self.run("codex", "plugin", "add", "mark@mark", "--json"))
+            if disabled:
+                self.change("preserve disabled Codex Mark", self.codex_disabled)
+            if not self.check:
+                installed = self.query("codex", "plugin", "list", "--json")["installed"]
+                if not any(x["pluginId"] == "mark@mark" and version(x.get("version")) >= version(self.mark_version) for x in installed):
+                    raise ValueError(f"Codex Mark plugin is older than Mark {self.mark_version} after native install")
+        if disabled:
+            print("sync-mark-integrations: Codex Mark is disabled (preserved)")
+        if any(x["name"] == "mark-local" for x in marketplaces) and not any(
+                x["marketplaceName"] == "mark-local" and x["name"] != "mark" for x in plugins):
+            self.change("remove obsolete Codex mark-local marketplace", lambda: self.run("codex", "plugin", "marketplace", "remove", "mark-local", "--json"))
+
+    def claude(self):
+        plugins = self.query("claude", "plugin", "list", "--json")
+        marketplaces = self.query("claude", "plugin", "marketplace", "list", "--json")
+        market = next((x for x in marketplaces if x["name"] == "mark"), None)
+        correct = (market is not None and public_repository(market.get("repo", market.get("url")))
+                   and market.get("ref") == "integrations")
+        current = next((x for x in plugins if x["id"] == "mark@mark" and x["scope"] == "user"), None)
+        legacy = next((x for x in plugins if x["id"] == "mark@mark-local" and x["scope"] == "user"), None)
+        disabled = (current or legacy or {}).get("enabled") is False
+        if market and not correct:
+            if any(x["id"].endswith("@mark") and x["id"] != "mark@mark" for x in plugins):
+                raise ValueError("Claude marketplace mark contains unrelated plugins; not replacing it")
+            if current is not None:
+                self.change("remove Claude Mark from obsolete marketplace source", lambda: self.run("claude", "plugin", "uninstall", "mark@mark", "--scope", "user", "--keep-data", "--json"))
+            self.change("replace Claude Mark marketplace source", lambda: self.run("claude", "plugin", "marketplace", "remove", "mark", "--scope", "user", "--json"))
+        if not correct:
+            self.change("add public Claude Mark marketplace", lambda: self.run("claude", "plugin", "marketplace", "add", REPOSITORY + "#integrations", "--scope", "user", "--json"))
+        if legacy:
+            self.change("remove Claude mark@mark-local duplicate", lambda: self.run("claude", "plugin", "uninstall", "mark@mark-local", "--scope", "user", "--keep-data", "--json"))
+        if not correct or current is None or version(current.get("version")) < version(self.mark_version):
+            operation = "update" if current is not None and correct else "install"
+            self.change(f"{operation} Claude mark@mark", lambda: self.run("claude", "plugin", operation, "mark@mark", "--scope", "user", "--json"))
+            if disabled:
+                self.change("preserve disabled Claude Mark", lambda: self.run("claude", "plugin", "disable", "mark@mark", "--scope", "user"))
+            if not self.check:
+                installed = self.query("claude", "plugin", "list", "--json")
+                if not any(x["id"] == "mark@mark" and x["scope"] == "user" and version(x.get("version")) >= version(self.mark_version) for x in installed):
+                    raise ValueError(f"Claude Mark plugin is older than Mark {self.mark_version} after native install/update")
+        if disabled:
+            print("sync-mark-integrations: Claude Mark is disabled (preserved)")
+        if any(x["name"] == "mark-local" for x in marketplaces) and not any(
+                x["id"].endswith("@mark-local") and x["id"] != "mark@mark-local" for x in plugins):
+            self.change("remove obsolete Claude mark-local marketplace", lambda: self.run("claude", "plugin", "marketplace", "remove", "mark-local", "--scope", "user", "--json"))
+
+    def fx(self):
+        package = self.cache / "mark/integrations" / self.mark_version / "fx"
+        if not (package / "skills/mark/SKILL.md").exists():
+            self.change("materialize version-matched fx Mark package", lambda: self.run("mark", "integration", "path", "--agent", "fx"))
+            if self.check:
+                return
+        desired = skill_files(package / "skills/mark")
+        if "SKILL.md" not in desired or "open-review.mjs" not in desired or "common/bridge.mjs" not in desired:
+            raise ValueError("fx Mark export is missing its detached skill or helper")
+        target = self.home / ".fx/skills/mark"
+        current = skill_files(target)
+        receipt_path = self.home / ".local/state/mark-integrations/fx-skill.json"
+        receipt = read_json(receipt_path)
+        if current and current != desired and hashes(current) != receipt.get("files"):
+            previous = self.cache / "mark/integrations"
+            if not any(current == skill_files(p) for p in previous.glob("*/fx/skills/mark")):
+                raise ValueError("modified or unowned fx Mark skill preserved; move it aside before syncing")
+        profile = self.home / ".fx/mcp.json"
+        before = read_json(profile)
+        after = copy.deepcopy(before)
+        servers = after.setdefault("mcp", copy.deepcopy(after.get("mcpServers", {})))
+        legacy = after.get("mcpServers", {}).get("mark")
+        existing = servers.get("mark", legacy or {})
+        for entry in (existing, legacy):
+            if entry and not (Path(entry.get("command", "")).name == "mark"
+                              and entry.get("args") in (["mcp"], ["mcp", "--harness", "fx"])):
+                raise ValueError("custom fx server named mark preserved; choose another name before syncing")
+        servers["mark"] = {**existing, "command": "mark", "args": ["mcp", "--harness", "fx"]}
+        if legacy is not None:
+            del after["mcpServers"]["mark"]
+        if current != desired:
+            def copy_skill():
+                for name, data in desired.items():
+                    atomic_write(target / name, data)
+                for name in current.keys() - desired.keys():
+                    (target / name).unlink()
+            self.change("sync detached fx Mark skill", copy_skill)
+        ownership = {"version": self.mark_version, "files": hashes(desired)}
+        if receipt != ownership:
+            self.change("record fx Mark skill ownership", lambda: atomic_write(receipt_path, json_bytes(ownership)))
+        if after != before:
+            self.change("configure fx Mark MCP", lambda: atomic_write(profile, json_bytes(after)))
+        if existing.get("enabled") is False or existing.get("disabled") is True:
+            print("sync-mark-integrations: fx Mark MCP is disabled (preserved)")
+
+    def reconcile(self):
+        if "github:phongndo/mark" not in self.tools:
+            print("sync-mark-integrations: Mark is not selected in mise; nothing to do")
+            return []
+        if not self.ensure_mark():
+            return self.changes
+        for tool in TOOLS:
+            if self.available(tool):
+                getattr(self, tool)()
+        if not self.changes:
+            print("sync-mark-integrations: selected integrations are current")
+        return self.changes
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="report drift without installing or writing files")
+    parser.add_argument("--mise", default="mise", help="mise executable (activation passes its absolute Nix path)")
+    args = parser.parse_args()
+    changes = Reconciler(Path.home(), check=args.check, mise=args.mise).reconcile()
+    return int(args.check and bool(changes))
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        sys.exit(f"sync-mark-integrations: {error}")

@@ -35,6 +35,16 @@ with `mise upgrade github:phongndo/mark`. `home/personal-projects.nix` loads
 hz's Bash and Zsh integration from the installed version; open a new shell
 after updating hz. On NixOS, prebuilt GNU/Linux releases use `nix-ld`.
 
+Mark's native integrations are reconciled by
+`chezmoi/private_dot_local/bin/executable_sync-mark-integrations` after mise
+installation, and again after `bin/sync` upgrades tools. Pi's package is owned
+by the shared Pi settings template; the reconciler installs native packages,
+marketplaces, and bundled skills for the selected harnesses. It preserves
+unrelated configuration and leaves the retired fx harness unselected.
+Run `MISE_AUTO_INSTALL=false mise -C "$HOME" exec -- python3 "$HOME/.local/bin/sync-mark-integrations" --check`
+to inspect drift without changing the live configuration. Review histories,
+conversations, credentials, and plugin caches remain machine-local.
+
 Homebrew apps, mise tools, and live chezmoi files are intentionally outside
 Nix's reproducibility and rollback guarantees. Files marked `writable` in
 `home/files.nix` link to this checkout so application edits can be reviewed
