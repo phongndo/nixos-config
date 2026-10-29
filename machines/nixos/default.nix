@@ -130,12 +130,21 @@
     };
   };
 
-  # SSH/SFTP, Tailscale Serve HTTPS, and Rex are private to the tailnet.
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [
-    22
-    443
-    7297
-  ];
+  # SSH/SFTP, Tailscale Serve HTTPS, Rex, and previews (8765 static, 8766-8799
+  # development apps) are private to the tailnet.
+  networking.firewall.interfaces.tailscale0 = {
+    allowedTCPPorts = [
+      22
+      443
+      7297
+    ];
+    allowedTCPPortRanges = [
+      {
+        from = 8765;
+        to = 8799;
+      }
+    ];
+  };
 
   # The recording service reads these separately from the interactive atoprc.
   environment.etc."default/atop".text = ''

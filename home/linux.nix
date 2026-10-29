@@ -2,6 +2,7 @@
 {
   hosts,
   inputs,
+  lib,
   pkgs,
   ...
 }:
@@ -16,6 +17,31 @@
     # host z. Use the IPv4 address; Rex's hostname/IPv6 path fails to load terminals.
     extraListen = [ "tailnet://:7297" ];
   };
+
+  # Shared previews: a read-only static server for ~/.local/share/previews on
+  # z's tailnet address only. Linger keeps it running across logins and
+  # reboots, and it retries until Tailscale has the address up.
+  systemd.user.services.previews = {
+    Unit.Description = "Shared previews";
+    Service = {
+      # Keep directory listings: miniserve's automatic --index selection follows
+      # symlinked indexes despite --no-symlinks. Link to explicit HTML files.
+      ExecStart = lib.concatStringsSep " " [
+        (lib.getExe pkgs.miniserve)
+        "--interfaces ${hosts.z.address} --port 8765"
+        "--no-symlinks --dirs-first --title Previews --hide-version-footer"
+        "%h/.local/share/previews"
+      ];
+      Restart = "always";
+      RestartSec = 5;
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectHome = "read-only";
+      ProtectSystem = "strict";
+    };
+    Install.WantedBy = [ "default.target" ];
+  };
+  systemd.user.tmpfiles.rules = [ "d %h/.local/share/previews 0700 - - -" ];
 
   programs.ssh = {
     enable = true;
