@@ -6,7 +6,8 @@
 {{- $merged := mustMergeOverwrite (deepCopy $current) (includeTemplate "codex-config.toml.tmpl" . | fromToml) -}}
 {{- /* Native HTTP keeps OAuth sign-in out of MCP startup; service actions go
       through code mode, so the direct call tool is off.
-      Manual: on each host, run `codex mcp login executor`. */ -}}
+      Manual: on each host, run `codex mcp login executor`; over SSH, add
+      --no-browser and paste back the URL the browser lands on. */ -}}
 {{- $servers := get $merged "mcp_servers" | default dict -}}
 {{- $_ := set $servers "executor" (dict "url" "https://mcp.executor.sh/mcp" "startup_timeout_sec" 30 "disabled_tools" (list "call")) -}}
 {{- $_ := set $merged "mcp_servers" $servers -}}

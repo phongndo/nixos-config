@@ -1,7 +1,8 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* Own the Executor and Radius entries; Pi's toggles, per-tool
       restrictions, and other servers stay as Pi wrote them.
-      Manual: on each host, sign in with `/login radius` in Pi. */ -}}
+      Manual: on each host, sign in with `/login radius` in Pi; over SSH, choose
+      the device code. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list) "exposure" "codemode" -}}
 {{- $radius := dict "url" "https://radius.pi.dev/mcp" "auth" (dict "provider" "radius") -}}
