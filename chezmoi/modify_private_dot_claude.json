@@ -1,0 +1,13 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* ~/.claude.json is Claude Code's own state file. Own only the Executor
+      MCP entry, and keep the original text when it already matches. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := deepCopy $current -}}
+{{- $servers := get $merged "mcpServers" | default dict -}}
+{{- $_ := set $servers "executor" (dict "type" "stdio" "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list)) -}}
+{{- $_ := set $merged "mcpServers" $servers -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

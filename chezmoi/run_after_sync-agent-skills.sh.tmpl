@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Intentionally run_after, not run_onchange: edits in the canonical checkout
-# must reconcile on EVERY apply even when the chezmoi source is unchanged.
-set -euo pipefail
-if ! command -v python3 >/dev/null 2>&1; then
-  printf '%s\n' 'sync-agent-skills: python3 is required; install it and rerun chezmoi apply.' >&2
-  exit 1
-fi
-exec python3 "$HOME/.local/bin/sync-agent-skills"

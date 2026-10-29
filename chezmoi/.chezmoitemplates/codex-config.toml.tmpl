@@ -1,5 +1,3 @@
-model_provider = "openai"
-model_reasoning_effort = "high"
 approvals_reviewer = "user"
 approval_policy = "never"
 default_permissions = ":danger-full-access"
@@ -24,8 +22,3 @@ enabled = true
 
 [features.context_management]
 experimental_mode = true
-
-[hooks.state]
-
-[hooks.state."{{ .chezmoi.homeDir }}/.codex/hooks.json:session_start:0:0"]
-trusted_hash = "sha256:1e5a59bb87ae3ffb373de26575badc6bdadb660ca2ce0759e531d7014c53b9d4"

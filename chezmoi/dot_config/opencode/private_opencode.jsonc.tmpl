@@ -1,0 +1,16 @@
+// Managed by nix-config. OpenCode keeps its own settings in opencode.json;
+// this file takes precedence for the keys below.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "shell": "/etc/profiles/per-user/{{ .chezmoi.username }}/bin/bash",
+  "mcp": {
+    "servers": {
+      "executor": {
+        "type": "local",
+        "command": ["{{ .chezmoi.homeDir }}/.local/bin/executor-mcp"],
+        "timeout": { "catalog": 30000, "execution": 30000 },
+        "codemode": true
+      }
+    }
+  }
+}

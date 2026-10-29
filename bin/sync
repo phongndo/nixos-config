@@ -46,6 +46,4 @@ fi
 # Home Manager applies the mise config and installs missing tools. Upgrade
 # existing tools too, keeping the versions/ranges declared in that config.
 mise --yes -C "$HOME" upgrade
-# Refresh native packages and versioned skills after the final tool upgrade.
-mise -C "$HOME" exec -- python3 "$HOME/.local/bin/sync-mark-integrations"
 printf 'Synced %s. Open a new shell to load updated integrations.\n' "$host"

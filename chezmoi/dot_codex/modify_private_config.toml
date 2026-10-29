@@ -1,10 +1,15 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Codex owns local trust/runtime state; sync-agent-mcp owns managed MCP connections.
-      Merge shared settings instead of replacing either writer's additions.
-      Keep the original text when unchanged to avoid formatting churn. */ -}}
+{{- /* Codex owns local trust, plugins, and runtime state. Merge the shared
+      settings over them, own the Executor server outright, and keep the
+      original text when nothing changes to avoid formatting churn. */ -}}
 {{- $current := .chezmoi.stdin | fromToml -}}
-{{- $shared := includeTemplate "codex-config.toml.tmpl" . | fromToml -}}
-{{- $merged := mustMergeOverwrite (deepCopy $current) $shared -}}
+{{- $merged := mustMergeOverwrite (deepCopy $current) (includeTemplate "codex-config.toml.tmpl" . | fromToml) -}}
+{{- /* Native HTTP keeps OAuth sign-in out of MCP startup; service actions go
+      through code mode, so the direct call tool is off.
+      Manual: on each host, run `codex mcp login executor`. */ -}}
+{{- $servers := get $merged "mcp_servers" | default dict -}}
+{{- $_ := set $servers "executor" (dict "url" "https://mcp.executor.sh/mcp" "startup_timeout_sec" 30 "disabled_tools" (list "call")) -}}
+{{- $_ := set $merged "mcp_servers" $servers -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

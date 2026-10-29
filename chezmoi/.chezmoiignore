@@ -2,8 +2,8 @@
 # These patterns are guardrails so a future `chezmoi add` of a live agent
 # directory cannot commit credentials or runtime state.
 #
-# Extension/skill/theme source lives in ~/code/pi-extensions. Do not
-# chezmoi add ~/.pi/agent/{extensions,skills,themes}.
+# Pi's extensions and themes live in ~/code/pi-extensions; shared skills live in
+# dot_agents/exact_skills. Do not chezmoi add ~/.pi/agent/{extensions,skills,themes}.
 auth.json
 *.sqlite*
 *.sqlite-shm
@@ -21,16 +21,13 @@ sessions/**
 session-state/**
 servers/**
 .DS_Store
-.migrated-from-dot-pi
 models-store.json
 trust.json
 web-telemetry.jsonl
-herdr-agent-state.*
-herdr-tui-session.js
 
-# Claude Code: only settings and the shared instructions are chezmoi-managed.
-# Skills are distributed by sync-agent-skills, not copied from live state.
-.claude.json
+# Claude Code: only settings, the Executor entry in ~/.claude.json, and the
+# shared instructions are chezmoi-managed. run_after_link-claude-skills.sh
+# links the shared skills into its skill folder.
 .claude/.credentials.json
 .claude/settings.local.json
 .claude/skills/**
@@ -49,9 +46,8 @@ herdr-tui-session.js
 .claude/telemetry/**
 .claude/todos/**
 
-# fx discovers shared skills in Codex/Claude; its MCP file is reconciled by
-# sync-agent-mcp, and its remaining files are local runtime state.
-.fx/**
+# Rex installs and updates its own skill in the shared skill folder.
+.agents/skills/rex
 
 # Machine keys are provisioned directly, never committed or synced.
 .ssh/id_*
@@ -63,5 +59,4 @@ herdr-tui-session.js
 
 # Retired agent state must not be re-imported into the source tree.
 .dsh/**
-# Let .chezmoiremove remove the formerly managed patch.
-!.dsh/cordis.patch.yml
+.fx/**

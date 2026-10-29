@@ -2,6 +2,9 @@
 # All agents use the same Executor Cloud workspace. OAuth client credentials
 # stay in mcp-remote's local store; provider credentials stay in Executor Cloud.
 # Service actions use execute; discovery and approval/resume tools stay available.
+# Manual: on each host, run `executor-mcp --login`. On z, first forward the callback
+# from y with `ssh -L 3338:127.0.0.1:3338 z`. Connect provider accounts at
+# https://app.executor.sh/org/me-9f65b0.
 set -euo pipefail
 umask 077
 client=mcp-remote

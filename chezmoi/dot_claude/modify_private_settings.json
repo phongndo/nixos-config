@@ -1,10 +1,14 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* Seed shared preferences, preserve machine-local settings, and enforce
-      auto memory and commit/PR attribution off. */ -}}
+      auto memory and commit/PR attribution off and the Bash tool's shell. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $merged := mustMergeOverwrite (dict "effortLevel" "high" "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
+{{- $merged := mustMergeOverwrite (dict "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
 {{- $_ := set $merged "autoMemoryEnabled" false -}}
 {{- $_ := set $merged "attribution" (dict "commit" "" "pr" "") -}}
+{{- /* Run the Bash tool with Nix bash on both hosts. */ -}}
+{{- $env := get $merged "env" | default dict -}}
+{{- $_ := set $env "CLAUDE_CODE_SHELL" (printf "/etc/profiles/per-user/%s/bin/bash" .chezmoi.username) -}}
+{{- $_ := set $merged "env" $env -}}
 {{- /* Use the managed code-mode bridge in Claude Code, while leaving the
       account-level Executor connector available to Claude chat. */ -}}
 {{- $denied := get $merged "deniedMcpServers" | default (list) -}}

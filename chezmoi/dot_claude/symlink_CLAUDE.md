@@ -1,1 +1,1 @@
-../.pi/agent/AGENTS.md
+../.agents/AGENTS.md

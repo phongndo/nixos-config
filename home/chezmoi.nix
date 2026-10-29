@@ -18,15 +18,6 @@ in
       unstablePkgs.mise
     ];
 
-    # Activation starts with a restricted PATH, not home.packages or mise.
-    # The run_after skill-sync hook needs Python and Git before miseInstall;
-    # Mark's native integration reconciliation uses mise after installation.
-    extraActivationPath = [
-      pkgs.python3
-      pkgs.git
-      unstablePkgs.mise
-    ];
-
     # Set this before mise parses configuration, not inside its TOML template.
     sessionVariables.MISE_IGNORED_CONFIG_PATHS = "${source}/dot_config/mise/config.toml.tmpl";
 
@@ -43,12 +34,6 @@ in
       # Install the tools selected by the freshly applied mise configuration.
       miseInstall = lib.hm.dag.entryAfter [ "chezmoiApply" ] ''
         $DRY_RUN_CMD ${lib.getExe unstablePkgs.mise} --yes -C "${config.home.homeDirectory}" install
-      '';
-
-      syncMarkIntegrations = lib.hm.dag.entryAfter [ "miseInstall" ] ''
-        $DRY_RUN_CMD ${lib.getExe pkgs.python3} \
-          "${config.home.homeDirectory}/.local/bin/sync-mark-integrations" \
-          --mise "${lib.getExe unstablePkgs.mise}"
       '';
     };
   };

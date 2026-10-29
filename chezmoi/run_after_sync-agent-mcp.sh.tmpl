@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Reconcile after native config merges, preserving unrelated local settings.
-# Both hosts use the Executor Cloud client; model/provider settings stay intact.
-set -euo pipefail
-exec python3 "$HOME/.local/bin/sync-agent-mcp"
