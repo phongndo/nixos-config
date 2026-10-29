@@ -19,3 +19,6 @@ config/gh/hosts.yml
 *secret*
 *credentials*
 *password*
+# 1Password's agent skill and MCP wrapper hold no credentials.
+!*1password-environments
+!executable_fx-1password-mcp
