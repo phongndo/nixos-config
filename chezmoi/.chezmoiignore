@@ -63,6 +63,11 @@ web-telemetry.jsonl
 .agents/plugin-skills
 {{ end }}
 
+# Claude Code's computer use runs on macOS only.
+{{ if ne .chezmoi.os "darwin" }}
+.local/bin/claude-computer-use
+{{ end }}
+
 # Retired agent state must not be re-imported into the source tree.
 .dsh/**
 .fx/**
