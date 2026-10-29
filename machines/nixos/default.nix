@@ -131,7 +131,10 @@
   };
 
   # SSH/SFTP, Tailscale Serve HTTPS, Rex, and previews (8765 static, 8766-8799
-  # development apps) are private to the tailnet.
+  # development apps) are private to the tailnet. Tailscale accepts tailnet
+  # traffic before this firewall, so its access rules decide who reaches them.
+  # Manual: z is shared with another user; in the tailnet policy, grant
+  # autogroup:shared only the ports they need (such as 443), not "*".
   networking.firewall.interfaces.tailscale0 = {
     allowedTCPPorts = [
       22

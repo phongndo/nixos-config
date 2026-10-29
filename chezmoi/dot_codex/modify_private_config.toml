@@ -10,6 +10,21 @@
 {{- $servers := get $merged "mcp_servers" | default dict -}}
 {{- $_ := set $servers "executor" (dict "url" "https://mcp.executor.sh/mcp" "startup_timeout_sec" 30 "disabled_tools" (list "call")) -}}
 {{- $_ := set $merged "mcp_servers" $servers -}}
+{{- /* Account plugins take their on/off state from the ChatGPT account, so hide
+      their apps locally, reading the app IDs from the installed plugins: the
+      managed Executor server replaces the account connector, as in Claude
+      Code, and Google integrations stay off. */ -}}
+{{- $apps := get $merged "apps" | default dict -}}
+{{- range $plugin := list "executor" "google-drive" -}}
+{{-   range glob (joinPath $.chezmoi.homeDir ".codex/plugins/cache/openai-curated-remote" $plugin "*/.app.json") -}}
+{{-     range $app := (include . | fromJson).apps -}}
+{{-       $_ := set $apps $app.id (mustMergeOverwrite (get $apps $app.id | default dict) (dict "enabled" false)) -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{- if $apps -}}
+{{-   $_ := set $merged "apps" $apps -}}
+{{- end -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

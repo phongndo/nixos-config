@@ -24,7 +24,7 @@ cp /tmp/my-lesson.html ~/.local/share/previews/my-task/index.html
 ```
 
 Link directly to the HTML file, for example
-`http://z.tail5606b4.ts.net:8765/my-task/index.html`; a directory URL shows a file
+`http://<z's hostname>:8765/my-task/index.html`; a directory URL shows a file
 listing. Verify the URL returns the expected content before sharing it. Use a
 browser check when the artifact has interactive behavior.
 

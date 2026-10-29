@@ -129,6 +129,7 @@ in
         (lib.mkOrder 900 ''
           # Home Manager creates the history parent on every startup. Its parent
           # already exists, so implement that one check with Zsh builtins.
+          # Home Manager 26.11 checks first itself; delete this shim with it.
           dirname() {
             if (( $# == 1 )); then
               print -r -- "''${1:h}"

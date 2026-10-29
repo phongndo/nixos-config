@@ -22,12 +22,3 @@ enabled = true
 
 [features.context_management]
 experimental_mode = true
-
-# Account plugins take their on/off state from the ChatGPT account, so hide
-# their apps locally instead: the managed Executor server replaces the account
-# connector, as in Claude Code, and Google integrations stay off.
-[apps.asdk_app_6acd465c1d148191832781c3c8ab4d99] # Executor
-enabled = false
-
-[apps.connector_5f3c8c41a1e54ad7a76272c89e2554fa] # Google Drive
-enabled = false
