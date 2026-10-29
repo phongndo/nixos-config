@@ -1,28 +1,35 @@
-Shared agent skills
+Shared agent skills and their upstreams
 
-codebase-design, diagnosing-bugs, grill-me, grilling, handoff, research, teach,
-and wizard are adapted from Matt Pocock's skills,
-https://github.com/mattpocock/skills, under the MIT license below. Local
-adaptations name skills without harness-specific command syntax and keep each
-skill's substantive workflow. Upstream changes up to commit 59db609
-(2026-10-27) are merged.
+Each link lists the upstream commits for that skill. Anything newer than the
+synced commit is an upstream change not yet merged here.
 
-- grill-me, grilling: skills/productivity, from 85f83d3. grilling asks
-  settled-prerequisite questions in batches through the interactive question
-  tool.
-- handoff: skills/productivity, from d28dfdc.
-- teach: skills/productivity, from 6654f6b. Agrees on a workspace before
-  creating learning files inside a software project.
-- codebase-design, diagnosing-bugs, research, wizard: skills/engineering,
-  from 3cca18b. research uses available web tools without nested research
-  agents; codebase-design and diagnosing-bugs cite current project
-  documentation instead of a context summary; wizard's pause stops at EOF.
+Skill            Synced   Upstream history
+codebase-design  59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/codebase-design
+diagnosing-bugs  59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/diagnosing-bugs
+grill-me         59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/grill-me
+grilling         59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/grilling
+handoff          59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/handoff
+research         59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/research
+teach            59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/teach
+wizard           59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/wizard
+babysit-pr       1085050  https://github.com/t3dotgg/tstack/commits/main/skills/babysit-pr
+file-pr          1085050  https://github.com/t3dotgg/tstack/commits/main/skills/file-pr
+full-send        1085050  https://github.com/t3dotgg/tstack/commits/main/skills/full-send
+full-stop        1085050  https://github.com/t3dotgg/tstack/commits/main/skills/full-stop
+sol-loop         1085050  https://github.com/t3dotgg/tstack/commits/main/skills/sol-loop
 
 previews and yeet are this repository's own workflows.
 
-babysit-pr, file-pr, full-send, full-stop, and sol-loop are copied unchanged
-from Theo Browne's tstack, https://github.com/t3dotgg/tstack, at commit 1085050
-(2026-10-27), under the MIT license below.
+Local changes to Matt Pocock's skills (https://github.com/mattpocock/skills):
+skills are named without harness-specific command syntax; grilling asks
+settled-prerequisite questions in batches through the interactive question
+tool; teach agrees on a workspace before creating learning files inside a
+software project; research uses available web tools without nested research
+agents; codebase-design and diagnosing-bugs cite current project documentation
+instead of a context summary; wizard's pause stops at EOF. resolving-merge-
+conflicts was dropped after upstream removed it in daa01d8.
+
+tstack's skills (https://github.com/t3dotgg/tstack) are copied unchanged.
 
 MIT License
 
