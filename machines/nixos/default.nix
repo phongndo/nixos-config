@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   imports = [
@@ -36,6 +36,10 @@
 
   i18n.defaultLocale = "en_US.UTF-8";
 
+  # Keep Nix managed by NixOS while replacing only its package with the pinned
+  # Determinate distribution and matching dependencies.
+  nix.package = inputs.determinate-nix.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
   nix.settings = {
     experimental-features = [
       "nix-command"
@@ -52,8 +56,9 @@
     lazy-trees = true;
 
     # NixOS runs the Nix binary without Determinate's netrc-merging helper.
-    # Provision this file separately, owned by dp with mode 0600, for both
-    # user-side flake downloads and root's Nix daemon.
+    # Manual: put the Rex package token here, owned by dp with mode 0600, for
+    # both user-side flake downloads and root's Nix daemon. See
+    # https://www.superlogical.com/rex/docs/linux/installation#nix-and-nixos
     netrc-file = "/etc/determinate/rex.netrc";
   };
 
@@ -96,22 +101,13 @@
         systemd
       ];
     };
-
-    # The shared shell uses eza; avoid spawning dircolors for each Zsh startup.
-    zsh.enableLsColors = false;
-
-    # Pin y's host key so unattended SSH never needs a trust-on-first-use prompt.
-    ssh.knownHosts.y = {
-      extraHostNames = [ "100.90.20.37" ];
-      publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPChw4RsEFgDyt/Wc9GVoLw4nztnx7us5pWwUg5EFYXu";
-    };
   };
 
   services = {
     # Mirror the Mac's Karabiner layers on every detected keyboard.
     kanata = {
       enable = true;
-      keyboards.phony.config = builtins.readFile ../../kanata/box.kbd;
+      keyboards.phony.config = builtins.readFile ../../config/kanata/box.kbd;
     };
 
     # SSH is reachable only inside the tailnet and still requires the user's
@@ -126,8 +122,8 @@
       };
     };
 
-    # Establish the encrypted transport first. Authentication remains an
-    # explicit interactive step so no tailnet credential enters the Nix store.
+    # Establish the encrypted transport first. Manual: `sudo tailscale up` and
+    # the `tailscale serve` routes, so no tailnet credential enters the Nix store.
     tailscale = {
       enable = true;
       openFirewall = true;

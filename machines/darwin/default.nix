@@ -13,11 +13,4 @@ _:
   };
 
   services.openssh.enable = true;
-
-  # Pin z's host key so unattended SSH never needs a trust-on-first-use prompt.
-  programs.ssh.knownHosts.z = {
-    extraHostNames = [ "100.122.138.125" ];
-    publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAFCKBLd4XKaEVeOFk1B9nj8vt3eoo1HJ6IYagK5fvOp";
-  };
-
 }

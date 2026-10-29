@@ -1,21 +1,3 @@
-# Add user tools without discarding platform paths such as NixOS setuid
-# wrappers. Inside a Nix development shell, preserve the flake's PATH.
-if [[ -z "${IN_NIX_SHELL:-}" ]]; then
-  PATH="$HOME/.local/share/mise/shims:$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
-  if [[ "$OSTYPE" == darwin* ]]; then
-    PATH="$PATH:/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.lmstudio/bin"
-  fi
-  export PATH
-
-  # Shims select the configured tool version per invocation without running
-  # mise's comparatively expensive shell hook at every startup.
-  [[ -r "$HOME/.grok/completions/bash/grok.bash" ]] && source "$HOME/.grok/completions/bash/grok.bash"
-fi
-
-# Editor
-export EDITOR="nvim"
-export VISUAL="$EDITOR"
-
 ulimit -n 65536
 
 # Nix runs a development shell's shellHook after Bash reads .bashrc, so update

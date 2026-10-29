@@ -1,3 +1,5 @@
+# Home Manager modules shared by y and z. Platform-only settings live in
+# darwin.nix and linux.nix.
 _:
 
 {
@@ -5,7 +7,6 @@ _:
     ./chezmoi.nix
     ./files.nix
     ./packages.nix
-    ./personal-projects.nix
     ./shell.nix
   ];
 

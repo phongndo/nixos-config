@@ -24,67 +24,30 @@
       url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      nixpkgs-unstable,
-      determinate-nix,
-      rex,
-      home-manager,
-      nix-darwin,
-      ...
-    }:
+    { nixpkgs, ... }@inputs:
     let
-      darwinSystem = "aarch64-darwin";
-      linuxSystem = "x86_64-linux";
-      mkSystem = import ./lib/mk-system.nix {
-        inherit
-          self
-          nixpkgs
-          nixpkgs-unstable
-          home-manager
-          nix-darwin
-          ;
-      };
-
-      y = mkSystem {
-        name = "y";
-        system = darwinSystem;
-        user = "dp";
-      };
-
-      z = mkSystem {
-        name = "z";
-        system = linuxSystem;
-        user = "dp";
-        modules = [
-          {
-            # Keep Nix managed by NixOS while replacing only its package with
-            # the pinned Determinate distribution and matching dependencies.
-            nix.package = determinate-nix.packages.${linuxSystem}.default;
-
-            home-manager.users.dp = {
-              imports = [ rex.homeManagerModules.default ];
-              services.rex = {
-                enable = true;
-                # Use z's existing tailnet identity; Rex admits its owner.
-                extraListen = [ "tailnet://:7297" ];
-              };
-            };
-          }
-        ];
-      };
-
+      mkSystem = import ./lib/mk-system.nix inputs;
+      systems = [
+        "aarch64-darwin"
+        "x86_64-linux"
+      ];
     in
     {
-      darwinConfigurations.y = y;
-      nixosConfigurations.z = z;
+      darwinConfigurations.y = mkSystem {
+        name = "y";
+        system = "aarch64-darwin";
+        user = "dp";
+      };
 
-      formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt-tree;
-      formatter.${linuxSystem} = nixpkgs.legacyPackages.${linuxSystem}.nixfmt-tree;
+      nixosConfigurations.z = mkSystem {
+        name = "z";
+        system = "x86_64-linux";
+        user = "dp";
+      };
+
+      formatter = nixpkgs.lib.genAttrs systems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
     };
 }

@@ -1,17 +1,17 @@
 .DS_Store
+__pycache__/
 
-# Nix and Home Manager build/activation output
+# Nix build output and Home Manager backups
 /result
 result-*
 *.hm-backup
 
-github-copilot
+# Application state in writable config directories
+config/karabiner/automatic_backups/
+config/gh/hosts.yml
+*.log
 
-# Backup files
-*.bak
-karabiner/automatic_backups/
-
-# Sensitive data - credentials, keys, tokens
+# Credentials must never enter this repository.
 *.env
 *.pem
 *.key
@@ -19,25 +19,3 @@ karabiner/automatic_backups/
 *secret*
 *credentials*
 *password*
-gh/hosts.yml
-
-# Database files
-*.mdb
-*.db
-*.sqlite
-*.sqlite3
-
-# Log files
-*.log
-.nvimlog
-
-# Generated application state
-__pycache__/
-racket/racket-prefs.rktd
-
-# Stardew Valley for some reason
-StardewValley/
-
-# hz stores local worktree registry state here; keep local-only.
-hz/registry.json
-hz/registry.json.lock

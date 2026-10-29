@@ -1,75 +1,38 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, ... }:
 
 let
-  configRoot = "${config.home.homeDirectory}/nix-config";
-  alfredWorkflow = "Library/Application Support/Alfred/Alfred.alfredpreferences/workflows/user.workflow.63D398BB-A391-40E9-B356-24123A2B339E";
-
-  immutable = source: {
-    inherit source;
-    force = true;
-  };
-
-  writable = relative: {
-    source = config.lib.file.mkOutOfStoreSymlink "${configRoot}/${relative}";
-    force = true;
-  };
+  inherit (config.lib.dotfiles) immutable writable;
 in
 {
-  # Non-agent dotfiles only; home/chezmoi.nix owns the agent-tool handoff.
-  home = {
-    file = lib.mkMerge [
-      {
-        ".bashrc".force = true;
-        ".zshenv".force = true;
-      }
+  # Link helpers for this module and home/darwin.nix. Writable files link to
+  # this checkout so application edits can be reviewed and committed.
+  lib.dotfiles = {
+    immutable = source: {
+      inherit source;
+      force = true;
+    };
+    writable = relative: {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/${relative}";
+      force = true;
+    };
+  };
 
-      (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-        # Alfred owns the workflow directory. Link its editable source files
-        # individually so activation never has to replace that directory.
-        "${alfredWorkflow}/focus-window.sh" = writable "alfred/appfocus/focus-window.sh";
-        "${alfredWorkflow}/info.plist" = writable "alfred/appfocus/info.plist";
-        "${alfredWorkflow}/list-windows.sh" = writable "alfred/appfocus/list-windows.sh";
-      })
-    ];
+  # Shared non-agent dotfiles; home/chezmoi.nix owns the agent-tool handoff.
+  home.file = {
+    ".bashrc".force = true;
+    ".zshenv".force = true;
   };
 
   xdg = {
     enable = true;
 
-    configFile = lib.mkMerge [
-      {
-        "nvim/init.lua" = immutable ../nvim/init.lua;
-        "starship.toml" = immutable ../starship/starship.toml;
+    configFile = {
+      "nvim/init.lua" = immutable ../config/nvim/init.lua;
+      "starship.toml" = immutable ../config/starship/starship.toml;
 
-        "btop/btop.conf" = writable "btop/btop.conf";
-        "gh/config.yml" = writable "gh/config.yml";
-        "nvim/lazy-lock.json" = writable "nvim/lazy-lock.json";
-      }
-
-      (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-        "ghostty/config" = immutable ../ghostty/config;
-        "ghostty/themes/mono" = immutable ../ghostty/themes/mono;
-        "karabiner/karabiner.json" = writable "karabiner/karabiner.json";
-        "launchd/skhd-runner" = immutable ../launchd/skhd-runner;
-        "launchd/yabai-runner" = immutable ../launchd/yabai-runner;
-        "skhd/focus-app" = immutable ../skhd/focus-app;
-        "skhd/mark" = immutable ../skhd/mark;
-        "skhd/skhdrc" = (immutable ../skhd/skhdrc) // {
-          # skhd's watcher can miss Home Manager replacing a Nix-store symlink.
-          # Reload after linking the new config; leave stopped daemons stopped.
-          onChange = ''
-            if /usr/bin/pgrep -u "$(/usr/bin/id -u)" -x skhd >/dev/null; then
-              ${lib.getExe pkgs.skhd} --reload
-            fi
-          '';
-        };
-        "yabai/yabairc" = immutable ../yabai/yabairc;
-      })
-    ];
+      "btop/btop.conf" = writable "config/btop/btop.conf";
+      "gh/config.yml" = writable "config/gh/config.yml";
+      "nvim/lazy-lock.json" = writable "config/nvim/lazy-lock.json";
+    };
   };
 }
