@@ -46,6 +46,19 @@ web-telemetry.jsonl
 .claude/telemetry/**
 .claude/todos/**
 
+# fx: only settings, the managed MCP entries, the shared instructions, and the
+# 1Password skill are chezmoi-managed. It reads ~/.agents/skills itself.
+.fx/*.lock
+.fx/*-auth.json
+.fx/api-key
+.fx/backups/**
+.fx/diagnostics/**
+.fx/file-index/**
+.fx/mcp-credentials/**
+.fx/provider-versions/**
+.fx/recordings/**
+.fx/traces/**
+
 # Rex installs and updates its own skill in the shared skill folder.
 .agents/skills/rex
 
@@ -61,8 +74,9 @@ web-telemetry.jsonl
 # desktop app; only macOS has the app.
 {{ if ne .chezmoi.os "darwin" }}
 .agents/plugin-skills
+.fx/skills/1password-environments
+.local/bin/fx-1password-mcp
 {{ end }}
 
 # Retired agent state must not be re-imported into the source tree.
 .dsh/**
-.fx/**

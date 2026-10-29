@@ -1,0 +1,13 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* fx writes its sign-in, model, and preference state here. Seed full
+      access, as the other agents have, and preserve local choices; fx saves
+      full access as "yolo". Enforce updates off: fx would replace its binary
+      inside mise's install folder, and mise already tracks its releases. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := mustMergeOverwrite (dict "permission_mode" "full-access") (deepCopy $current) -}}
+{{- $_ := set $merged "auto_upgrade" false -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

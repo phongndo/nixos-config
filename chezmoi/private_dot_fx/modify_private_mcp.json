@@ -1,0 +1,22 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Own the Executor entry, and on macOS the 1Password entry, whose server
+      runs in 1Password's desktop app and needs fx-1password-mcp to connect;
+      servers added with `/mcp add` stay as fx wrote them. fx reads the legacy
+      `mcp` key but not both keys in one file, so move its servers under
+      `mcpServers`. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $servers := mustMergeOverwrite (get $current "mcp" | default dict | deepCopy) (get $current "mcpServers" | default dict | deepCopy) -}}
+{{- $_ := set $servers "executor" (mustMergeOverwrite (get $servers "executor" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/executor-mcp")))) -}}
+{{- $_ := unset (get $servers "executor") "args" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $_ := set $servers "1password" (mustMergeOverwrite (get $servers "1password" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/fx-1password-mcp")))) -}}
+{{-   $_ := unset (get $servers "1password") "args" -}}
+{{- end -}}
+{{- $merged := deepCopy $current -}}
+{{- $_ := unset $merged "mcp" -}}
+{{- $_ := set $merged "mcpServers" $servers -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

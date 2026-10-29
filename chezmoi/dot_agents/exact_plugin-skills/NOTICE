@@ -1,9 +1,10 @@
 Skills that Claude Code and Codex get from plugins
 
 Pi and OpenCode have no plugin for these, so they load this folder through
-their skills settings. Claude Code and Codex do not scan it, so their plugin
-copies are not duplicated. Each link lists the upstream commits for that skill.
-Anything newer than the synced commit is an upstream change not yet merged here.
+their skills settings; fx has no such setting and gets a copy in ~/.fx/skills.
+Claude Code and Codex do not scan it, so their plugin copies are not duplicated.
+Each link lists the upstream commits for that skill. Anything newer than the
+synced commit is an upstream change not yet merged here.
 
 Skill                   Synced   Upstream history
 1password-environments  46c4ac8  https://github.com/1Password/1password-codex-plugin/commits/main/plugins/1password/skills/1password-environments
