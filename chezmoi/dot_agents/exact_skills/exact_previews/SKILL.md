@@ -1,6 +1,6 @@
 ---
 name: previews
-description: Share HTML artifacts or development apps for viewing in a browser on another device, through z's always-on preview server. Use when the user wants to preview, view, or share a page or app.
+description: Use when the user wants to see an HTML page, artifact, or running dev app from z in a browser, or asks for a preview link to open on their Mac or phone.
 ---
 
 # Shared previews on z
