@@ -9,6 +9,13 @@ _nix_update_flake_prompt() {
     return 0
   fi
 
+  # direnv loads a project's shell only while you are inside that project.
+  if [[ -n "${DIRENV_DIR:-}" ]]; then
+    export NIX_FLAKE_INSIDE=1
+    unset NIX_FLAKE_OUTSIDE
+    return 0
+  fi
+
   if [[ -z "${_NIX_FLAKE_ROOT_CAPTURED:-}" ]]; then
     local root="$PWD"
     while [[ "$root" != "/" && ! -f "$root/flake.nix" ]]; do

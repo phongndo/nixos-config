@@ -1,1 +1,1 @@
-y is a Mac on nix-darwin with Determinate Nix and z is NixOS, both configured in ~/nix-config; run project tools with `nix develop -c <command>` and one-off tools with `nix shell nixpkgs#<package> -c <command>`.
+y is a Mac on nix-darwin with Determinate Nix and z is NixOS, both configured in ~/nix-config; if `IN_NIX_SHELL` is set, the project's dev shell is already active, so run tools directly, otherwise use `nix develop -c <command>`; use `nix shell nixpkgs#<package> -c <command>` for one-off tools.

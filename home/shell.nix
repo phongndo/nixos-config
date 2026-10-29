@@ -89,6 +89,14 @@ let
   '';
   zoxideBashInit = mkShellInit "zoxide-bash-init" "${lib.getExe pkgs.zoxide} init bash";
   zoxideZshInit = mkShellInit "zoxide-zsh-init" "${lib.getExe pkgs.zoxide} init zsh";
+  direnvExe = lib.getExe config.programs.direnv.package;
+  direnvZshHook = mkShellInit "direnv-zsh-hook" "${direnvExe} hook zsh";
+  direnvBashHook = pkgs.runCommand "direnv-bash-hook" { } ''
+    ${direnvExe} hook bash > "$out"
+    # Check PROMPT_COMMAND's array attribute with a builtin instead of a subshell.
+    substituteInPlace "$out" \
+      --replace-fail '"$(declare -p PROMPT_COMMAND 2>&1)" == "declare -a"*' '"''${PROMPT_COMMAND@a}" == *a*'
+  '';
 in
 {
   home = {
@@ -210,6 +218,8 @@ in
             bindkey -r '^[c'
           fi
 
+          source ${direnvZshHook}
+
           # hz's completion initialization belongs to the lazy loader above.
           ${hzInit "zsh" ''_hz_init="$("$_hz_dir/latest/bin/hz" shell zsh)" && print -r -- "''${_hz_init/autoload -Uz compinit && compinit/:}" >| "$_hz_cache.$$"''}
         '')
@@ -269,11 +279,29 @@ in
           if [[ $TERM != "dumb" ]]; then
             source ${starshipBashInit}
           fi
+          source ${direnvBashHook}
 
           ${hzInit "bash" ''"$_hz_dir/latest/bin/hz" shell bash >| "$_hz_cache.$$"''}
         '')
         (lib.mkOrder 2000 rexShellInit)
       ];
+    };
+
+    # Load a project's flake dev shell on cd, cached by nix-direnv, so agents
+    # started in a project inherit it instead of running `nix develop -c`.
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+      # Both shells source build-time-generated hooks above.
+      enableBashIntegration = false;
+      enableZshIntegration = false;
+      config.global.hide_env_diff = true;
+      # Keep direnv's cache out of projects, so repositories need no ignore rule.
+      stdlib = ''
+        direnv_layout_dir() {
+          echo "''${XDG_CACHE_HOME:-$HOME/.cache}/direnv/layouts/''${PWD//\//%}"
+        }
+      '';
     };
 
     # Both shells source build-time-generated Starship initialization above.
