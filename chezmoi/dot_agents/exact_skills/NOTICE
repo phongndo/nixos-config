@@ -14,7 +14,7 @@ teach            59db609  https://github.com/mattpocock/skills/commits/main/skil
 wizard           59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/wizard
 sol-loop         1085050  https://github.com/t3dotgg/tstack/commits/main/skills/sol-loop
 
-previews is this repository's own workflow.
+previews and hillclimb are this repository's own workflows.
 
 Local changes to Matt Pocock's skills (https://github.com/mattpocock/skills):
 skills are named without harness-specific command syntax; grilling asks
