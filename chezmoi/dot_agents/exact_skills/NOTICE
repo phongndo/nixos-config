@@ -12,10 +12,6 @@ handoff          59db609  https://github.com/mattpocock/skills/commits/main/skil
 research         59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/research
 teach            59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/teach
 wizard           59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/wizard
-babysit-pr       1085050  https://github.com/t3dotgg/tstack/commits/main/skills/babysit-pr
-file-pr          1085050  https://github.com/t3dotgg/tstack/commits/main/skills/file-pr
-full-send        1085050  https://github.com/t3dotgg/tstack/commits/main/skills/full-send
-full-stop        1085050  https://github.com/t3dotgg/tstack/commits/main/skills/full-stop
 sol-loop         1085050  https://github.com/t3dotgg/tstack/commits/main/skills/sol-loop
 
 previews is this repository's own workflow.
@@ -29,7 +25,7 @@ agents; codebase-design and diagnosing-bugs cite current project documentation
 instead of a context summary; wizard's pause stops at EOF. resolving-merge-
 conflicts was dropped after upstream removed it in daa01d8.
 
-tstack's skills (https://github.com/t3dotgg/tstack) are copied unchanged.
+sol-loop is copied unchanged from tstack (https://github.com/t3dotgg/tstack).
 
 MIT License
 
