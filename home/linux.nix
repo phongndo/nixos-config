@@ -4,6 +4,7 @@
   inputs,
   lib,
   pkgs,
+  unstablePkgs,
   ...
 }:
 
@@ -55,8 +56,25 @@
   };
 
   home.packages = with pkgs; [
-    # macOS gets 1Password CLI through Homebrew.
-    _1password-cli
+    # macOS gets 1Password CLI through Homebrew. z has no 1Password app, so op
+    # signs in as a service account that can only read the agents' Environments;
+    # `op run --environment` needs CLI 2.41+. The wrapper loads its token and
+    # the package keeps the shell completions.
+    # Manual: in 1Password, create a service account with read access to those
+    # Environments, then on z run `(umask 077; mkdir -p ~/.config/op &&
+    # cat >~/.config/op/service-account-token)` and paste the token.
+    unstablePkgs._1password-cli
+    (lib.hiPrio (writeShellApplication {
+      name = "op";
+      text = ''
+        token="''${XDG_CONFIG_HOME:-$HOME/.config}/op/service-account-token"
+        if [[ -z "''${OP_SERVICE_ACCOUNT_TOKEN:-}" && -r "$token" ]]; then
+          OP_SERVICE_ACCOUNT_TOKEN="$(<"$token")"
+          export OP_SERVICE_ACCOUNT_TOKEN
+        fi
+        exec ${lib.getExe unstablePkgs._1password-cli} "$@"
+      '';
+    }))
     # Native toolchain for T3 Code's npm/node-pty builds (Node itself stays on mise).
     # On macOS it would shadow Xcode's cc/c++; use Xcode or a development shell.
     gcc

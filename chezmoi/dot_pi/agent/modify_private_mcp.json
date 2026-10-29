@@ -1,12 +1,17 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Own the Executor and Radius entries; Pi's toggles, per-tool
+{{- /* Own the Executor and Radius entries, and on macOS the 1Password entry,
+      whose server runs in 1Password's desktop app; Pi's toggles, per-tool
       restrictions, and other servers stay as Pi wrote them.
       Manual: on each host, sign in with `/login radius` in Pi; over SSH, choose
       the device code. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list) "exposure" "codemode" -}}
 {{- $radius := dict "url" "https://radius.pi.dev/mcp" "auth" (dict "provider" "radius") -}}
-{{- $merged := mustMergeOverwrite (deepCopy $current) (dict "mcpServers" (dict "executor" $executor "radius" $radius)) -}}
+{{- $servers := dict "executor" $executor "radius" $radius -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $_ := set $servers "1password" (dict "command" "1password-mcp") -}}
+{{- end -}}
+{{- $merged := mustMergeOverwrite (deepCopy $current) (dict "mcpServers" $servers) -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

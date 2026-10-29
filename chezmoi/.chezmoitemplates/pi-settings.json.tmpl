@@ -12,6 +12,10 @@
     "git:github.com/earendil-works/pi-review",
     "{{ .chezmoi.homeDir }}/code/pi-extensions"
   ],
+{{- /* Claude Code and Codex get these skills from plugins; Pi has none. */}}
+{{- if eq .chezmoi.os "darwin" }}
+  "skills": ["{{ .chezmoi.homeDir }}/.agents/plugin-skills"],
+{{- end }}
   "treeFilterMode": "default",
   "hideThinkingBlock": true,
   "showCacheMissNotices": true,

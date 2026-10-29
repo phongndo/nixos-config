@@ -66,6 +66,9 @@
       "zen"
 
       # Mac utilities
+      # Manual: in 1Password, turn on Settings > Developer > Integrate with MCP
+      # clients for the agents' MCP server, and set up 1Password for Claude so
+      # Claude in Chrome can sign in to websites.
       "1password"
       "1password-cli"
       "aldente"

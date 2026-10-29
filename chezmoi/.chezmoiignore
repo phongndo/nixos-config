@@ -57,6 +57,12 @@ web-telemetry.jsonl
 .local/bin/rex
 {{ end }}
 
+# Plugin skills serve the 1Password MCP server, which runs in 1Password's
+# desktop app; only macOS has the app.
+{{ if ne .chezmoi.os "darwin" }}
+.agents/plugin-skills
+{{ end }}
+
 # Retired agent state must not be re-imported into the source tree.
 .dsh/**
 .fx/**
