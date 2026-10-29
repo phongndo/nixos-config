@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+preview_root="${XDG_DATA_HOME:-$HOME/.local/share}/previews"
+preview_ip="$(tailscale ip -4)"
+if [[ -z "$preview_ip" ]]; then
+  printf 'Connect this host to Tailscale before starting previews.\n' >&2
+  exit 1
+fi
+mkdir -p -m 700 "$preview_root"
+
+# Keep this launch read-only even when another task set miniserve options.
+for preview_setting in "${!MINISERVE_@}"; do
+  unset "$preview_setting"
+done
+
+# Keep directory listings: miniserve 0.35's automatic --index selection follows
+# symlink indexes despite --no-symlinks. Link to explicit HTML filenames instead.
+exec nix shell --inputs-from "$HOME/nix-config" nixpkgs#miniserve -c miniserve \
+  --interfaces "$preview_ip" --port 8765 --no-symlinks --dirs-first \
+  --title Previews --hide-version-footer "$preview_root"

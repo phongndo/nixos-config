@@ -1,6 +1,6 @@
 Shared agent skills
 
-All skills here except yeet are adapted from Matt Pocock's skills,
+All skills here except previews and yeet are adapted from Matt Pocock's skills,
 https://github.com/mattpocock/skills, under the MIT license below. Local
 adaptations name skills without harness-specific command syntax and keep each
 skill's substantive workflow. Upstream changes up to commit 59db609
@@ -17,7 +17,7 @@ skill's substantive workflow. Upstream changes up to commit 59db609
   agents; codebase-design and diagnosing-bugs cite current project
   documentation instead of a context summary; wizard's pause stops at EOF.
 
-yeet is this repository's own publishing workflow.
+previews and yeet are this repository's own workflows.
 
 MIT License
 
