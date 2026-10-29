@@ -39,49 +39,60 @@
     enable = true;
     onActivation.cleanup = "uninstall";
     casks = [
-      "1password"
-      "1password-cli"
-      "aldente"
-      "alfred"
-      "bartender"
-      "betterdisplay"
+      # Agents and AI
       "chatgpt"
       "claude"
       "codexbar"
       "deepseek-harness"
       "devin-desktop"
       "devin-desktop@next"
-      "discord"
+      "lm-studio"
+      "opencode-desktop"
+      "t3-code"
+
+      # Development
       "docker-desktop"
-      "fastmail"
-      "figma"
       "ghostty"
+      "kitty"
+      "mono-mdk"
+      "utm"
+      "visual-studio-code"
+      "zed"
+
+      # Browsers
       "google-chrome"
       "helium-browser"
+      "orion"
+      "zen"
+
+      # Mac utilities
+      "1password"
+      "1password-cli"
+      "aldente"
+      "alfred"
+      "bartender"
+      "betterdisplay"
       "karabiner-elements"
       "keymapp"
-      "kitty"
-      "lm-studio"
-      "minecraft"
-      "mono-mdk"
+      "tailscale-app"
+
+      # Apps
+      "discord"
+      "fastmail"
+      "figma"
       "notion"
       "obsidian"
-      "opencode-desktop"
-      "orion"
-      "prismlauncher"
-      "robloxstudio"
       "sioyek"
       "skim"
       "slack"
       "spotify"
-      "steam"
-      "t3-code"
-      "tailscale-app"
-      "utm"
-      "visual-studio-code"
-      "zed"
-      "zen"
       "zoom"
+
+      # Games
+      "minecraft"
+      "prismlauncher"
+      "robloxstudio"
+      "steam"
     ];
   };
 

@@ -22,3 +22,11 @@ enabled = true
 
 [features.context_management]
 experimental_mode = true
+
+# The managed Executor server replaces the account-level connector, as in Claude
+# Code; Google integrations stay off.
+[plugins."executor@openai-curated-remote"]
+enabled = false
+
+[plugins."google-drive@openai-curated-remote"]
+enabled = false

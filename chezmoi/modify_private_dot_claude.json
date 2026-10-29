@@ -1,13 +1,21 @@
-{{- /* chezmoi:modify-template */ -}}
-{{- /* ~/.claude.json is Claude Code's own state file. Own only the Executor
-      MCP entry, and keep the original text when it already matches. */ -}}
-{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $merged := deepCopy $current -}}
-{{- $servers := get $merged "mcpServers" | default dict -}}
-{{- $_ := set $servers "executor" (dict "type" "stdio" "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list)) -}}
-{{- $_ := set $merged "mcpServers" $servers -}}
-{{- if eq ($current | toJson) ($merged | toJson) -}}
-{{- .chezmoi.stdin -}}
-{{- else -}}
-{{ $merged | toPrettyJson }}
-{{- end -}}
+#!/bin/sh
+# ~/.claude.json is Claude Code's own state file. Own only the Executor MCP
+# entry: jq keeps every other key, its order, and number precision, and the
+# file is returned untouched when the entry already matches.
+set -eu
+current=$(mktemp)
+trap 'rm -f "$current"' EXIT
+cat >"$current"
+jq="/etc/profiles/per-user/$(id -un)/bin/jq"
+if [ ! -x "$jq" ]; then
+  cat "$current"
+  exit 0
+fi
+[ -s "$current" ] || printf '{}' >"$current"
+entry='{type: "stdio", command: $command, args: []}'
+command="$HOME/.local/bin/executor-mcp"
+if "$jq" -e --arg command "$command" ".mcpServers.executor == $entry" "$current" >/dev/null; then
+  cat "$current"
+else
+  "$jq" --arg command "$command" ".mcpServers.executor = $entry" "$current"
+fi
