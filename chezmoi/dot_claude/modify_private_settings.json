@@ -22,25 +22,6 @@
 {{- $denied = append $denied (dict "serverName" "claude.ai Executor") -}}
 {{- end -}}
 {{- $_ := set $merged "deniedMcpServers" $denied -}}
-{{- /* Keep computer use on in every project; it needs macOS. */ -}}
-{{- if eq .chezmoi.os "darwin" -}}
-{{-   $command := joinPath .chezmoi.homeDir ".local/bin/claude-computer-use" -}}
-{{-   $hooks := get $merged "hooks" | default dict -}}
-{{-   $sessionStart := get $hooks "SessionStart" | default (list) -}}
-{{-   $hasHook := false -}}
-{{-   range $sessionStart -}}
-{{-     range (get . "hooks" | default (list)) -}}
-{{-       if eq (get . "command") $command -}}
-{{-         $hasHook = true -}}
-{{-       end -}}
-{{-     end -}}
-{{-   end -}}
-{{-   if not $hasHook -}}
-{{-     $sessionStart = append $sessionStart (dict "hooks" (list (dict "type" "command" "command" $command "timeout" 5))) -}}
-{{-     $_ := set $hooks "SessionStart" $sessionStart -}}
-{{-     $_ := set $merged "hooks" $hooks -}}
-{{-   end -}}
-{{- end -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}
