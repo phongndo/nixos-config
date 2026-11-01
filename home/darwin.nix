@@ -84,8 +84,6 @@ in
   };
 
   xdg.configFile = {
-    "ghostty/config" = immutable ../config/ghostty/config;
-    "ghostty/themes/mono" = immutable ../config/ghostty/themes/mono;
     "karabiner/karabiner.json" = writable "config/karabiner/karabiner.json";
     "skhd/focus-app" = immutable ../config/skhd/focus-app;
     "skhd/mark" = immutable ../config/skhd/mark;

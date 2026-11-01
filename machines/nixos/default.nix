@@ -68,10 +68,6 @@
     memoryPercent = 25;
   };
 
-  # User-facing tools are owned by Home Manager. Keep only the terminal data
-  # required before the user profile is available.
-  environment.systemPackages = [ pkgs.ghostty.terminfo ];
-
   programs = {
     atop.enable = true;
 

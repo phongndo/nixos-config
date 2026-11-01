@@ -53,7 +53,6 @@
 
       # Development
       "docker-desktop"
-      "ghostty"
       "kitty"
       "mono-mdk"
       "utm"
