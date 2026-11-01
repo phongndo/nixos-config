@@ -77,7 +77,10 @@
       "alfred"
       "bartender"
       "betterdisplay"
-      "hex"
+      {
+        name = "anomalyco/tap/hex";
+        trusted = true;
+      }
       "karabiner-elements"
       "keymapp"
       "tailscale-app"
