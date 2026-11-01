@@ -30,21 +30,5 @@
       zellij
       zoxide
     ])
-    # Neovim language servers and companions. Keep config/nvim/init.lua in sync.
-    # Project development shells can put matching server/toolchain versions first on PATH.
-    ++ (with pkgs; [
-      bash-language-server
-      clang-tools # clangd for C / C++ (macOS nvim uses Xcode's; see config/nvim/init.lua)
-      nixd
-      ocamlPackages.ocaml-lsp
-      ocamlformat # ocamlformat-rpc is used for OCaml hover formatting
-      pyright
-      rust-analyzer
-      typescript-language-server # JavaScript / TypeScript / JSX / TSX
-      vscode-langservers-extracted # HTML / CSS / JSON (no extra ESLint diagnostics)
-      yaml-language-server
-      zig # ZLS needs the compiler and standard library; use a matching project version.
-      zls
-    ])
     ++ [ unstablePkgs.llama-cpp ];
 }

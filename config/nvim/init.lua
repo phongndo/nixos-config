@@ -17,32 +17,6 @@ opt.undofile = true
 opt.splitbelow = true
 opt.splitright = true
 
-vim.diagnostic.config({
-  virtual_text = false,
-  virtual_lines = false,
-  signs = true,
-  underline = true,
-  update_in_insert = false,
-  severity_sort = true,
-  float = { border = "rounded", source = "if_many" },
-})
-
-vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { desc = "Line diagnostics" })
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setqflist, { desc = "All diagnostics" })
-
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = vim.api.nvim_create_augroup("UserLsp", { clear = true }),
-  callback = function(args)
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = args.buf, desc = "Go to definition" })
-    -- Don't wait for Neovim's longer gr-prefixed mappings.
-    vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = args.buf, nowait = true, desc = "References" })
-    vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = args.buf, desc = "Go to implementation" })
-    vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, { buffer = args.buf, desc = "Rename" })
-    vim.keymap.set({ "n", "x" }, "<leader>a", vim.lsp.buf.code_action, { buffer = args.buf, desc = "Code action" })
-    -- Keep Neovim's K (hover) and [d / ]d (diagnostic navigation).
-  end,
-})
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
   local out = vim.fn.system({
@@ -60,69 +34,6 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  {
-    "neovim/nvim-lspconfig",
-    lazy = false,
-    dependencies = { "saghen/blink.cmp" },
-    config = function()
-      vim.lsp.config("*", {
-        capabilities = require("blink.cmp").get_lsp_capabilities(),
-      })
-      vim.lsp.config("nixd", {
-        settings = {
-          nixd = { formatting = { command = { "nixfmt" } } },
-        },
-      })
-      if vim.fn.has("mac") == 1 then
-        -- Xcode's clangd, not nixpkgs': nixpkgs' puts its own clang builtin headers
-        -- after the Xcode SDK's, which breaks libc++ from C++20 on ("unknown type name
-        -- '__uint32_t'"), e.g. under a .clangd's -std=c++23. --query-driver has clangd
-        -- ask the compiler for system headers: Xcode's, or a development shell's nix
-        -- clang named in compile_commands.json.
-        vim.lsp.config("clangd", {
-          cmd = {
-            "/usr/bin/clangd",
-            "--query-driver=/usr/bin/*,/Applications/Xcode*.app/**/bin/*,"
-              .. "/Library/Developer/CommandLineTools/**/bin/*,/nix/store/*/bin/*",
-          },
-        })
-      end
-
-      -- Executables come from home/packages.nix or the project's development shell.
-      -- Keep compiler flags, Python environments, etc. in project configuration.
-      vim.lsp.enable({
-        "clangd", -- C / C++; use the project's compile_commands.json.
-        "pyright",
-        "rust_analyzer",
-        "zls",
-        "ocamllsp",
-        "ts_ls", -- JavaScript / TypeScript, including React JSX / TSX.
-        "bashls",
-        "cssls",
-        "html",
-        "jsonls",
-        "yamlls",
-        "nixd",
-      })
-    end,
-  },
-  {
-    "saghen/blink.cmp",
-    version = "1.*",
-    opts = {
-      keymap = { preset = "enter" },
-      completion = {
-        list = { selection = { preselect = false, auto_insert = false } },
-        documentation = { auto_show = false },
-        ghost_text = { enabled = false },
-      },
-      signature = { enabled = false },
-      cmdline = { enabled = false },
-      sources = { default = { "lsp", "path", "buffer" } },
-      -- No downloaded native binary or Rust build needed on either Nix host.
-      fuzzy = { implementation = "lua" },
-    },
-  },
   {
     "phongndo/origin.nvim",
     lazy = false,
