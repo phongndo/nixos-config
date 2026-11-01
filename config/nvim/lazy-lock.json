@@ -1,8 +1,8 @@
 {
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
   "lualine.nvim": { "branch": "master", "commit": "221ce6b2d999187044529f49da6554a92f740a96" },
-  "nvim-treesitter": { "branch": "main", "commit": "1a4f47b03dfe92d28de7d5654c67327ef008c9e6" },
+  "nvim-treesitter": { "branch": "main", "commit": "a9c4e1457e2e59f1b82c8f78dcdb3b2517555200" },
   "oil.nvim": { "branch": "master", "commit": "d3733d933833a0e59b813ecec99341527adf0c28" },
-  "origin.nvim": { "branch": "main", "commit": "cb679e695464ce6dff84d6e814a6b5fa1cd3aa26" },
+  "origin.nvim": { "branch": "main", "commit": "7dc9d6d3416d41a42f433f1db7d515c37e3540fa" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" }
 }

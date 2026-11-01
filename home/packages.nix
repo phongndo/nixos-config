@@ -27,6 +27,7 @@
       ripgrep
       statix
       tmux
+      tree-sitter # Builds Neovim's syntax parsers.
       zellij
       zoxide
     ])

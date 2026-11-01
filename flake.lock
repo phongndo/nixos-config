@@ -99,15 +99,15 @@
     "home-manager": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-personal"
         ]
       },
       "locked": {
-        "lastModified": 1790996401,
-        "narHash": "sha256-f+kOxEmOUnQazVAmGg0i8hzwgd1kX/geY+k/Dpheye8=",
+        "lastModified": 1792818383,
+        "narHash": "sha256-199i7ubVSXTMl+0AAlL7cVCXSjcI+jWByMcimYjeMX0=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "db7d5e2332710f5abb088f6b5de927d7f9511b35",
+        "rev": "24f2190587513b9c2f73db112a17844ae912d965",
         "type": "github"
       },
       "original": {
@@ -170,6 +170,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-personal": {
+      "locked": {
+        "lastModified": 1793410479,
+        "narHash": "sha256-HzgjxrLY4AEc0044ZuM5CHbLSWLZgDlay1idmzvvpJs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fa1373130d5a21c040a47c5dbe1913d59ed91808",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-regression": {
       "locked": {
         "lastModified": 1643052045,
@@ -188,11 +204,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1793225069,
-        "narHash": "sha256-sx1f99WGrDfJ83KKuQrqGPmot0rnDgmpLJDzpU2oHQQ=",
+        "lastModified": 1793345420,
+        "narHash": "sha256-e/yiZ31gXRROBDcnOtT3YwDQ73NVG9Cepccbt86LIn8=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e62746b0b472753ef019baceab6f1e2e52014980",
+        "rev": "885ba4d038f10c3d17d7a92e8c3cc185b99c9158",
         "type": "github"
       },
       "original": {
@@ -221,14 +237,14 @@
     "rex": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-personal"
         ]
       },
       "locked": {
-        "lastModified": 1793041098,
-        "narHash": "sha256-dd6GRxsuxMcYbRYP/LtjMm8/NQ+rkEU03b3OA1G0ZJ8=",
+        "lastModified": 1793377904,
+        "narHash": "sha256-GmWf210OgpSfM532AGtm748vM68QltaA8MlqtqHgiy8=",
         "type": "tarball",
-        "url": "https://pkgs.superlogical.com/rex/nix/preview/0.1.0-preview.8.tar.gz"
+        "url": "https://pkgs.superlogical.com/rex/nix/preview/0.1.0-preview.12.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -241,6 +257,7 @@
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs_2",
+        "nixpkgs-personal": "nixpkgs-personal",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "rex": "rex"
       }

@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # Personal tools can advance without moving either host's system packages.
+    nixpkgs-personal.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     determinate-nix = {
       url = "https://flakehub.com/f/DeterminateSystems/nix-src/3.23.1";
@@ -12,12 +14,12 @@
 
     rex = {
       url = "https://pkgs.superlogical.com/rex/nix/preview.tar.gz";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-personal";
     };
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-personal";
     };
 
     nix-darwin = {

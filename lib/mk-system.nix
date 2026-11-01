@@ -3,6 +3,7 @@
 {
   self,
   nixpkgs,
+  nixpkgs-personal,
   nixpkgs-unstable,
   home-manager,
   nix-darwin,
@@ -50,7 +51,7 @@ systemBuilder {
       }) (removeAttrs hosts [ name ]);
 
       home-manager = {
-        useGlobalPkgs = true;
+        useGlobalPkgs = false;
         useUserPackages = true;
         extraSpecialArgs = {
           inherit
@@ -62,7 +63,12 @@ systemBuilder {
           configurationName = name;
           rebuildCommand = if isDarwin then "darwin-rebuild" else "nixos-rebuild";
         };
-        users.${user} = ../users/${user}/home-manager.nix;
+        users.${user} = {
+          imports = [ ../users/${user}/home-manager.nix ];
+          # Home Manager imports its own package set, on the same release channel.
+          _module.args.pkgsPath = nixpkgs-personal.outPath;
+          nixpkgs.config.allowUnfree = true;
+        };
       };
     }
   ];
