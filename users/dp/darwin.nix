@@ -38,6 +38,7 @@
   homebrew = {
     enable = true;
     onActivation.cleanup = "uninstall";
+    taps = [ "anomalyco/tap" ];
     casks = [
       # Agents and AI
       "chatgpt"
@@ -58,6 +59,7 @@
       "utm"
       "visual-studio-code"
       "zed"
+      "zed-delta"
 
       # Browsers
       "google-chrome"
@@ -75,6 +77,7 @@
       "alfred"
       "bartender"
       "betterdisplay"
+      "hex"
       "karabiner-elements"
       "keymapp"
       "tailscale-app"
