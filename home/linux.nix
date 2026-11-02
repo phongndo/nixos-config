@@ -44,6 +44,18 @@
   };
   systemd.user.tmpfiles.rules = [ "d %h/.local/share/previews 0700 - - -" ];
 
+  # ~/code/llvm-dev's justfile reads these. z has 32 threads but 30 GiB, and
+  # LLVM compiles with debug info need about 1.5 GiB each, so memory sets the
+  # job count; tests are light and use every thread. Builds run in a systemd
+  # scope capped below what Immich, agents, and the OS need.
+  home.sessionVariables = {
+    LLVM_JOBS = "12";
+    LLVM_LINK_JOBS = "3";
+    LLVM_TEST_JOBS = "32";
+    LLVM_MEMORY_HIGH = "18G";
+    LLVM_MEMORY_MAX = "20G";
+  };
+
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;

@@ -74,6 +74,14 @@ in
 
     sessionPath = lib.mkAfter [ "$HOME/.lmstudio/bin" ];
 
+    # ~/code/llvm-dev's justfile reads these. y's 16 cores, not its 64 GiB,
+    # limit LLVM builds, so compiles, links, and tests can all run wide.
+    sessionVariables = {
+      LLVM_JOBS = "16";
+      LLVM_LINK_JOBS = "4";
+      LLVM_TEST_JOBS = "16";
+    };
+
     # Alfred owns the workflow directory. Link its editable source files
     # individually so activation never has to replace that directory.
     file = {
