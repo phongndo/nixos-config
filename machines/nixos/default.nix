@@ -4,6 +4,7 @@
   imports = [
     ./hardware.nix
     ./immich.nix
+    ./resilience.nix
   ];
 
   boot.loader = {
