@@ -53,7 +53,6 @@ alt + shift - space : yabai -m window --toggle float >/dev/null 2>&1
 # App-first jumps. Focus the app's frontmost window on the current Space; with
 # no window here, front the app wherever it is, or launch it.
 alt - 0x29      : ~/.config/skhd/focus-app com.superlogical.rex
-alt - c         : ~/.config/skhd/focus-app com.openai.codex
 alt - f         : ~/.config/skhd/focus-app net.imput.helium
 alt - s         : ~/.config/skhd/focus-app com.tinyspeck.slackmacgap
 alt - t         : ~/.config/skhd/focus-app com.t3tools.t3code '/Applications/T3 Code (Nightly).app'
