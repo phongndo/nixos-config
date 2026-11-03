@@ -3,3 +3,5 @@ y is a Mac on nix-darwin with Determinate Nix and z is NixOS, both configured in
 Project secrets live in 1Password Environments: on y, manage them with the 1Password MCP server; on z, run commands with `op run --environment <id> -- <command>`. Never print secret values.
 
 Use Rex instead of tmux for terminal sessions, tabs, panes, and long-running commands; see the `rex` skill or `rex skill show`.
+
+When done, clean up what you started: Rex panes and tabs (not your own unless asked), background processes, temp files, branches, and worktrees; mention anything left running.
