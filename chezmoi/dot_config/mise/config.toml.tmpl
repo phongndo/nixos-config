@@ -23,3 +23,12 @@ node = "26"
 {{ if eq .chezmoi.os "darwin" -}}
 "github:phongndo/leetvim" = "latest"
 {{ end -}}
+
+# Devin publishes no GitHub releases or npm package, so read its own manifest.
+# Manual: on each host, run `devin auth login`.
+[tools."http:devin"]
+version = "latest"
+version_list_url = "https://static.devin.ai/cli/current/manifest.json"
+version_json_path = ".version"
+bin_path = "bin"
+url = '{{ `https://static.devin.ai/cli/{{ version }}/devin-{{ version }}-{{ arch(x64="x86_64", arm64="aarch64") }}-{{ os(macos="apple-darwin", linux="unknown-linux") }}.tar.gz` }}'
