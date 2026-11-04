@@ -33,6 +33,7 @@ in
       "btop/btop.conf" = writable "config/btop/btop.conf";
       "gh/config.yml" = writable "config/gh/config.yml";
       "nvim/lazy-lock.json" = writable "config/nvim/lazy-lock.json";
+      "rex/init.lua" = writable "config/rex/init.lua";
     };
   };
 }
