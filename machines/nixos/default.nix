@@ -7,7 +7,11 @@
   ];
 
   boot.loader = {
-    systemd-boot.enable = true;
+    systemd-boot = {
+      enable = true;
+      # Keep the 1 GiB ESP from filling with old generations' kernels.
+      configurationLimit = 20;
+    };
     efi.canTouchEfiVariables = true;
   };
 
@@ -47,8 +51,8 @@
     ];
 
     # Bound both simultaneous derivations and parallel workers per derivation.
-    max-jobs = 2;
-    cores = 4;
+    max-jobs = 3;
+    cores = 8;
 
     # Determinate's evaluator features are not enabled by the NixOS module,
     # because NixOS owns nix.conf instead of the Determinate installer.
@@ -62,10 +66,27 @@
     netrc-file = "/etc/determinate/rex.netrc";
   };
 
+  # Nothing else collects the store, which reached 350 GiB without this.
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
+  # Memory is z's bottleneck and its CPU is mostly idle, so spend CPU on both.
+  powerManagement.cpuFreqGovernor = "performance";
+
   # Compress cold pages during bursts; this is capacity, not reserved RAM.
   zramSwap = {
     enable = true;
-    memoryPercent = 25;
+    memoryPercent = 50;
+  };
+
+  # zram is far faster than disk: prefer it to dropping page cache, and skip
+  # the readahead that only pays off on seeking devices.
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 180;
+    "vm.page-cluster" = 0;
   };
 
   programs = {
@@ -170,8 +191,8 @@
       slices."app-t3code".sliceConfig = {
         # T3 adjusts its child slices at runtime. Limit their parent so those
         # adjustments cannot consume the host's remaining memory budget.
-        MemoryHigh = "16G";
-        MemoryMax = "18G";
+        MemoryHigh = "24G";
+        MemoryMax = "26G";
         TasksMax = 2048;
         ManagedOOMMemoryPressure = "kill";
       };
