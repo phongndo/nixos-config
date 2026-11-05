@@ -61,6 +61,8 @@ alt - m         : ~/.config/skhd/focus-app com.apple.MobileSMS
 alt - e         : ~/.config/skhd/focus-app com.apple.finder
 alt - i         : ~/.config/skhd/focus-app com.fastmail.mac.Fastmail
 alt - o         : ~/.config/skhd/focus-app md.obsidian
+alt - d         : ~/.config/skhd/focus-app com.hnc.Discord
+alt - r         : ~/.config/skhd/focus-app info.sioyek.sioyek
 
 # Fast previous-app toggle.
 alt - q : set -- $(/usr/bin/lsappinfo -nonames visibleProcessList 2>/dev/null); [ $# -ge 2 ] && /usr/bin/lsappinfo requestfront "$2" --immediate >/dev/null 2>&1
