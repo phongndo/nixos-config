@@ -3,7 +3,6 @@
 {
   imports = [
     ./hardware.nix
-    ./immich.nix
     ./resilience.nix
   ];
 
@@ -164,14 +163,15 @@
       RestartSec = "5s";
     };
 
-    # Builds, agents, and the UI have separate ceilings totalling 24 GiB.
-    # The remaining RAM supports the OS, SSH/Tailscale, and the Immich stack.
+    # z is mainly an agent machine, so agents get the largest ceiling. Together
+    # with builds and the UI that exceeds RAM, on the bet they rarely peak at once.
+    # The OS and SSH/Tailscale need well under 2 GiB.
     user = {
       slices."app-t3code".sliceConfig = {
         # T3 adjusts its child slices at runtime. Limit their parent so those
         # adjustments cannot consume the host's remaining memory budget.
-        MemoryHigh = "8G";
-        MemoryMax = "10G";
+        MemoryHigh = "16G";
+        MemoryMax = "18G";
         TasksMax = 2048;
         ManagedOOMMemoryPressure = "kill";
       };
@@ -189,7 +189,7 @@
       };
     };
 
-    # Personal file storage is independent of the Immich deployment.
+    # Personal file storage.
     tmpfiles.rules = [ "d /srv/data/files 0750 dp users -" ];
   };
 

@@ -12,7 +12,7 @@ let
   # ~/code/llvm-dev's justfile reads these. z has 32 threads but 30 GiB, and
   # LLVM compiles with debug info need about 1.5 GiB each, so memory sets the
   # job count; tests are light and use every thread. Builds run in a systemd
-  # scope capped below what Immich, agents, and the OS need.
+  # scope capped below what agents and the OS need.
   llvmBuildLimits = {
     LLVM_JOBS = "12";
     LLVM_LINK_JOBS = "3";
