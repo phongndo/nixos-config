@@ -32,3 +32,12 @@ version_list_url = "https://static.devin.ai/cli/current/manifest.json"
 version_json_path = ".version"
 bin_path = "bin"
 url = '{{ `https://static.devin.ai/cli/{{ version }}/devin-{{ version }}-{{ arch(x64="x86_64", arm64="aarch64") }}-{{ os(macos="apple-darwin", linux="unknown-linux") }}.tar.gz` }}'
+
+# Boat's release repo is shared with other components, so read its own version API.
+# Manual: on each host, run `boat login`.
+[tools."http:boat"]
+version = "latest"
+version_list_url = "https://boat.dev/api/boat/cli/version?platform=linux-x64&channel=prod"
+version_json_path = ".version"
+bin = "boat"
+url = '{{ `https://github.com/ariana-dot-dev/agent-server/releases/download/boat-cli-v{{ version }}/boat-{{ os(macos="darwin", linux="linux") }}-{{ arch(x64="x64", arm64="arm64") }}` }}'
