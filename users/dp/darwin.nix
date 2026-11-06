@@ -55,7 +55,6 @@
       "kitty"
       "mono-mdk"
       "utm"
-      "visual-studio-code"
       "zed"
       "zed-delta"
 
