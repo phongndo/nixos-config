@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Merge Executor into Zed's JSONC settings, preserving all other settings."""
+import json
+from pathlib import Path
+import sys
+
+
+def trivia_end(text, index):
+    while index < len(text):
+        if text[index].isspace():
+            index += 1
+        elif text.startswith("//", index):
+            end = text.find("\n", index + 2)
+            index = len(text) if end < 0 else end
+        elif text.startswith("/*", index):
+            end = text.find("*/", index + 2)
+            if end < 0:
+                raise ValueError("Unterminated JSONC comment")
+            index = end + 2
+        else:
+            break
+    return index
+
+
+def parse_jsonc(text):
+    text = text.removeprefix("\ufeff")
+    decoder = json.JSONDecoder()
+    result = []
+    index = 0
+    while index < len(text):
+        end = trivia_end(text, index)
+        if end != index:
+            result.append(" ")
+            index = end
+        elif text[index] == '"':
+            _, end = decoder.raw_decode(text, index)
+            result.append(text[index:end])
+            index = end
+        elif text[index] == "," and text[trivia_end(text, index + 1):][:1] in ("}", "]"):
+            index += 1
+        else:
+            result.append(text[index])
+            index += 1
+    return json.loads("".join(result))
+
+
+original = sys.stdin.read()
+settings = parse_jsonc(original or "{}")
+entry = {"command": str(Path.home() / ".local/bin/executor-mcp"), "args": [], "env": {}}
+servers = settings.setdefault("context_servers", {})
+if servers.get("executor") == entry:
+    sys.stdout.write(original)
+else:
+    servers["executor"] = entry
+    sys.stdout.write(json.dumps(settings, indent=2, ensure_ascii=False) + "\n")

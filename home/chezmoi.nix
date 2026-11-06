@@ -23,8 +23,9 @@ in
 
     activation = {
       # Link the bootstrap config before applying agent files and mise plugins.
+      # Activation's PATH has no Python, which Zed's modify script runs on.
       chezmoiApply = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-        $DRY_RUN_CMD ${lib.getExe pkgs.chezmoi} apply \
+        PATH="${lib.makeBinPath [ pkgs.python3 ]}:$PATH" $DRY_RUN_CMD ${lib.getExe pkgs.chezmoi} apply \
           --source "${source}" \
           --destination "${config.home.homeDirectory}" \
           --force \

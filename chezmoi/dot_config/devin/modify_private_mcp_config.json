@@ -1,0 +1,12 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Keep Devin's stdio transport aligned with the shared Executor OAuth bridge. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := deepCopy $current -}}
+{{- $servers := get $merged "mcpServers" | default dict -}}
+{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "transport" "stdio") -}}
+{{- $_ := set $merged "mcpServers" $servers -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}
