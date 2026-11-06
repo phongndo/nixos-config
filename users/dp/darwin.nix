@@ -43,7 +43,6 @@
       # Agents and AI
       "chatgpt"
       "claude"
-      "codexbar"
       "deepseek-harness"
       "devin-desktop"
       "devin-desktop@next"
