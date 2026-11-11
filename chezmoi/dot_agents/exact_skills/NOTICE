@@ -10,7 +10,6 @@ grilling         59db609  https://github.com/mattpocock/skills/commits/main/skil
 research         59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/research
 teach            59db609  https://github.com/mattpocock/skills/commits/main/skills/productivity/teach
 wizard           59db609  https://github.com/mattpocock/skills/commits/main/skills/engineering/wizard
-sol-loop         1085050  https://github.com/t3dotgg/tstack/commits/main/skills/sol-loop
 socratic-tutor   7c6715c  https://github.com/janestreet/agent_skills/commits/master/socratic-tutor
 
 previews and hillclimb are this repository's own workflows.
@@ -23,8 +22,6 @@ software project; research uses available web tools without nested research
 agents; codebase-design and diagnosing-bugs cite current project documentation
 instead of a context summary; wizard's pause stops at EOF. resolving-merge-
 conflicts was dropped after upstream removed it in daa01d8.
-
-sol-loop is copied unchanged from tstack (https://github.com/t3dotgg/tstack).
 
 socratic-tutor comes from Jane Street (https://github.com/janestreet/agent_skills);
 the only local change is that it runs only when invoked by name.
