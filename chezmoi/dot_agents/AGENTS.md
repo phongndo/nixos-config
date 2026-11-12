@@ -5,3 +5,7 @@ Project secrets live in 1Password Environments: on y, manage them with the 1Pass
 Use Rex instead of tmux for terminal sessions, tabs, panes, and long-running commands; see the `rex` skill or `rex skill show`.
 
 When done, clean up what you started: Rex panes and tabs (not your own unless asked), background processes, temp files, branches, and worktrees; mention anything left running.
+
+Executor (the `executor` MCP server) connects my apps: Discord, Fastmail, Figma, Firecrawl, GitHub, Google (Gmail, Calendar, Drive, Docs, Sheets, Slides, Forms, Contacts, Tasks, Meet, Photos), Hacker News, Hugging Face, Notion, Slack, Spotify, T3 Code, Tailscale, and YouTube; find tools with its `search` tool.
+
+If I tell you to use a tool, or you need one to finish the task, treat that as my approval: call it without asking first, and when an Executor call pauses for approval, resume it as approved.
