@@ -1,64 +1,138 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
-# Keep z reachable over the tailnet when hardware misbehaves. The onboard
-# Qualcomm WCN7850 Wi-Fi (ath12k) firmware has wedged once, flooding the log
-# for days before the host hung hard and sat dead until someone power-cycled it.
+# Keep z reachable over the tailnet when hardware misbehaves.
+#
+# The onboard Qualcomm WCN7850 Wi-Fi (ath12k) firmware wedges when the eero
+# switches channel or width on a DFS channel (Aug 29, Sep 25, Oct 3 2026). It
+# then floods the log, and twice the chip vanished from the PCI bus across a
+# reboot: the BIOS hides its slot when the chip fails link training at POST,
+# and only removing power brings it back. A shutdown does not, because the chip
+# sits on standby power behind its own ACPI power resource. The eero app cannot
+# pin channels or avoid DFS, so the trigger stays; this module limits the damage.
+#
+# Wi-Fi is the fast uplink (the saved Wi-Fi connection has route metric 50);
+# Ethernet goes through a slow GL.iNet and is the fallback.
 #
 # Manual, in the MSI BIOS: set "Restore after AC Power Loss" to "Power On" so
-# a power cut does not leave z off. Keep Ethernet plugged in; it is the
-# dependable uplink and NetworkManager prefers it over Wi-Fi.
+# a power cut does not leave z off. Keep Ethernet plugged in.
 let
-  # Reset the Wi-Fi card when its firmware stops answering the driver. A warm
-  # reset cannot help once the card has dropped off the PCI bus; that needs
-  # the PSU switched off, so the script only reports it.
+  # Reset the Wi-Fi chip when its firmware stops working. The reset cuts the
+  # chip's power through ACPI D3cold, the same as switching the PSU off, by
+  # parking the idle device on vfio-pci, which runtime-suspends it to D3cold.
+  # Once the BIOS has hidden the slot nothing in software can help, so the
+  # script only reports that, once per boot.
   ath12kRecover = pkgs.writeShellApplication {
     name = "ath12k-recover";
     runtimeInputs = with pkgs; [
       coreutils
+      gawk
       gnugrep
+      kmod
       systemd
+      config.networking.networkmanager.package
     ];
     text = ''
       state=/var/lib/ath12k-recover/last-reset
       cooldown=1800
       threshold=10
 
-      dev=""
-      for d in /sys/bus/pci/devices/*; do
-        if [ "$(cat "$d/vendor")" = 0x17cb ] && [ "$(cat "$d/device")" = 0x1107 ]; then
-          dev=$d
-        fi
-      done
+      find_dev() {
+        for d in /sys/bus/pci/devices/*; do
+          if [ "$(cat "$d/vendor")" = 0x17cb ] && [ "$(cat "$d/device")" = 0x1107 ]; then
+            echo "$d"
+            return
+          fi
+        done
+      }
 
+      connectivity() {
+        nmcli -g GENERAL.IP4-CONNECTIVITY device show "$1" 2>/dev/null | awk -F'[()]' '{print $2; exit}'
+      }
+
+      power_cycle() {
+        local dev=$1 bdf control state
+        bdf=$(basename "$dev")
+        control=$(cat "$dev/power/control")
+
+        if [ -e "$dev/driver" ]; then
+          echo "$bdf" > "$dev/driver/unbind"
+        fi
+        modprobe vfio-pci
+        echo vfio-pci > "$dev/driver_override"
+        echo auto > "$dev/power/control"
+        echo "$bdf" > /sys/bus/pci/drivers_probe
+
+        state=unknown
+        for _ in $(seq 20); do
+          state=$(cat "$dev/power_state")
+          [ "$state" = D3cold ] && break
+          sleep 0.5
+        done
+        echo "Wi-Fi $bdf parked in $state" >&2
+        sleep 5
+
+        echo "$bdf" > /sys/bus/pci/drivers/vfio-pci/unbind
+        echo > "$dev/driver_override"
+        echo "$control" > "$dev/power/control"
+        echo "$bdf" > /sys/bus/pci/drivers_probe
+      }
+
+      force=0
+      if [ "''${1:-}" = --force ]; then
+        force=1
+      fi
+
+      dev=$(find_dev)
       if [ -z "$dev" ]; then
-        echo "WCN7850 Wi-Fi is not on the PCI bus; switch the PSU off for a minute to bring it back" >&2
+        if [ ! -e /run/ath12k-recover-missing ]; then
+          echo "WCN7850 Wi-Fi is not on the PCI bus; shut down and switch the PSU off for a minute to bring it back" >&2
+          touch /run/ath12k-recover-missing
+        fi
         exit 0
       fi
 
-      errors=$(journalctl -k --since "5 min ago" -o cat \
+      errors=$(journalctl -k -b --since "-5min" -o cat \
         | grep -cE 'ath12k_pci .*(time out while waiting for (get )?fw stats|failed to pull fw stats|firmware crashed)' \
         || true)
       iface=$(ls "$dev/net" 2>/dev/null || true)
 
-      if [ "$errors" -lt "$threshold" ] && [ -n "$iface" ]; then
+      # A Wi-Fi-only outage: the Wi-Fi link is up but cannot reach the
+      # internet while Ethernet can, so the eero's uplink is not to blame.
+      wifi_dead=0
+      if [ -n "$iface" ]; then
+        eth=$(nmcli -t -f DEVICE,TYPE,STATE device | awk -F: '$2 == "ethernet" && $3 == "connected" {print $1; exit}')
+        if [ -n "$eth" ] \
+          && nmcli -t -f DEVICE,STATE device | grep -qx "$iface:connected" \
+          && [ "$(connectivity "$iface")" != full ] \
+          && [ "$(connectivity "$eth")" = full ]; then
+          wifi_dead=1
+        fi
+      fi
+
+      if [ "$force" = 0 ] && [ "$errors" -lt "$threshold" ] && [ -n "$iface" ] && [ "$wifi_dead" = 0 ]; then
         exit 0
       fi
 
       now=$(date +%s)
-      if [ -f "$state" ] && [ $((now - $(cat "$state"))) -lt "$cooldown" ]; then
-        echo "Wi-Fi unhealthy ($errors errors, interface '$iface') but reset within the last $cooldown s; waiting" >&2
+      if [ "$force" = 0 ] && [ -f "$state" ] && [ $((now - $(cat "$state"))) -lt "$cooldown" ]; then
+        echo "Wi-Fi unhealthy ($errors errors, interface '$iface', no internet: $wifi_dead) but reset within the last $cooldown s; waiting" >&2
         exit 0
       fi
+      mkdir -p "$(dirname "$state")"
       echo "$now" > "$state"
 
-      bdf=$(basename "$dev")
-      echo "Resetting Wi-Fi $bdf ($errors errors in 5 min, interface '$iface')" >&2
-      if [ -e "$dev/driver" ]; then
-        echo "$bdf" > "$dev/driver/unbind"
-      fi
-      echo 1 > "$dev/remove"
-      sleep 2
-      echo 1 > /sys/bus/pci/rescan
+      echo "Power-cycling Wi-Fi $(basename "$dev") ($errors errors in 5 min, interface '$iface', no internet: $wifi_dead, forced: $force)" >&2
+      power_cycle "$dev"
+
+      for _ in $(seq 30); do
+        if [ -n "$(ls "$dev/net" 2>/dev/null)" ]; then
+          echo "Wi-Fi is back as $(ls "$dev/net")" >&2
+          exit 0
+        fi
+        sleep 1
+      done
+      echo "Wi-Fi did not come back within 30 s after the power cycle" >&2
+      exit 1
     '';
   };
 in
@@ -80,8 +154,21 @@ in
     "kernel.hardlockup_panic" = 1;
   };
 
+  # Fail over to Ethernet when Wi-Fi stops reaching the internet: a device
+  # whose connectivity check fails gets +20000 on its default-route metric.
+  # The check binds to each device, so the reverse-path filter must be loose,
+  # or the reply on the non-default device is dropped and both devices fail.
+  networking.networkmanager.settings.connectivity = {
+    uri = "http://nmcheck.gnome.org/check_network_status.txt";
+    response = "NetworkManager is online";
+    interval = 30;
+  };
+  networking.firewall.checkReversePath = "loose";
+
+  environment.systemPackages = [ ath12kRecover ];
+
   systemd.services.ath12k-recover = {
-    description = "Reset the Wi-Fi card when its firmware wedges";
+    description = "Power-cycle the Wi-Fi chip when its firmware wedges";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${ath12kRecover}/bin/ath12k-recover";
