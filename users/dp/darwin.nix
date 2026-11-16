@@ -72,7 +72,6 @@
       "1password-cli"
       "aldente"
       "alfred"
-      "bartender"
       "betterdisplay"
       {
         name = "anomalyco/tap/hex";
