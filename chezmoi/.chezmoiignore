@@ -71,12 +71,24 @@ web-telemetry.jsonl
 {{ end }}
 
 # Plugin skills serve the 1Password MCP server, which runs in 1Password's
-# desktop app; only macOS has the app.
+# desktop app; only macOS has the app. Likewise only macOS has the Devin,
+# LM Studio, and GitHub Copilot apps whose Executor entries are managed.
 {{ if ne .chezmoi.os "darwin" }}
 .agents/plugin-skills
+.codeium
+.copilot
+.lmstudio
 .fx/skills/1password-environments
 .local/bin/fx-1password-mcp
 {{ end }}
 
-# Retired agent state must not be re-imported into the source tree.
+# Retired agent state must not be re-imported into the source tree. DeepSeek
+# Harness's macOS app keeps its profile here; only the Executor entry in its
+# patch list is managed.
 .dsh/**
+{{ if eq .chezmoi.os "darwin" }}
+!.dsh
+!.dsh/profiles
+!.dsh/profiles/desktop
+!.dsh/profiles/desktop/cordis.patch.yml
+{{ end }}

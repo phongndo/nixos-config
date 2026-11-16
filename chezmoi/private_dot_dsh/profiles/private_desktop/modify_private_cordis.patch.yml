@@ -1,0 +1,23 @@
+#!/bin/sh
+# DeepSeek Harness writes its own settings into this patch list. Own only the
+# Executor entry: drop any earlier copy of it (and an empty `[]`), keep every
+# other entry as the app wrote it, and append the current one. dsh scrubs the
+# environment of stdio servers, so pass HOME through for the wrapper.
+set -eu
+awk '
+  /^- / { skip = ($0 == "- id: mcp-executor") }
+  /^\[\][[:space:]]*$/ { next }
+  !skip { print }
+'
+cat <<YAML
+- id: mcp-executor
+  name: "@deepseek-ai/dsh-mcp-client"
+  config:
+    serverName: executor
+    transport: stdio
+    command: $HOME/.local/bin/executor-mcp
+    args: []
+    env:
+      HOME: $HOME
+    startupTimeoutMs: 30000
+YAML

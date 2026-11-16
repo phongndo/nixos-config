@@ -1,0 +1,14 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Devin's desktop app keeps its Cascade agent's MCP servers here (Devin
+      in ~/.codeium/windsurf, Devin - Next in ~/.codeium/windsurf-next).
+      Own only the Executor entry; servers added in the app stay as written. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := deepCopy $current -}}
+{{- $servers := get $merged "mcpServers" | default dict -}}
+{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list)) -}}
+{{- $_ := set $merged "mcpServers" $servers -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}
