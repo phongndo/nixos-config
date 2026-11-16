@@ -3,7 +3,10 @@
 # Executor entry: drop any earlier copy of it (and an empty `[]`), keep every
 # other entry as the app wrote it, and append the current one. dsh scrubs the
 # environment of stdio servers, so pass HOME through for the wrapper.
+# Home Manager activation runs this with a bare PATH; only macOS has the app,
+# so use its system tools.
 set -eu
+PATH=/usr/bin:/bin
 awk '
   /^- / { skip = ($0 == "- id: mcp-executor") }
   /^\[\][[:space:]]*$/ { next }
