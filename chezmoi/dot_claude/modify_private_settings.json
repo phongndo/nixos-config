@@ -22,6 +22,9 @@
 {{- $denied = append $denied (dict "serverName" "claude.ai Executor") -}}
 {{- end -}}
 {{- $_ := set $merged "deniedMcpServers" $denied -}}
+{{- /* Rex's own SessionStart hook (see run_after_sync-rex-agents) is silent
+      outside a Rex terminal; add one that says how to use Rex there. */ -}}
+{{- $merged = includeTemplate "rex-outside-hook.tmpl" $merged | fromJson -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

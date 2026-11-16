@@ -1,0 +1,25 @@
+{{- /* Takes an agent's hook config (Claude settings.json or Codex hooks.json)
+      and returns it as JSON with a SessionStart hook for sessions started
+      outside a Rex terminal, where Rex's own hook prints nothing. Replaces an
+      older copy of this hook, found by its text, and appends after Rex's hook
+      so Codex keeps trusting that one by position. */ -}}
+{{- $marker := "Not in a Rex terminal" -}}
+{{- $command := printf "/bin/sh -c 'test -n \"$REX_SESSION\" || ! command -v rex >/dev/null 2>&1 || echo \"%s (REX_SESSION is unset). Before using Rex, load the rex skill, then create a session for this task with: rex new <task-label> -c <dir> --json. Use its .session_id as your Rex session and leave existing Rex sessions alone.\"'" $marker -}}
+{{- $config := . -}}
+{{- $hooks := get $config "hooks" | default dict -}}
+{{- $start := list -}}
+{{- range (get $hooks "SessionStart" | default (list)) -}}
+{{-   $ours := false -}}
+{{-   range (get . "hooks" | default (list)) -}}
+{{-     if contains $marker (get . "command" | toString) -}}
+{{-       $ours = true -}}
+{{-     end -}}
+{{-   end -}}
+{{-   if not $ours -}}
+{{-     $start = append $start . -}}
+{{-   end -}}
+{{- end -}}
+{{- $start = append $start (dict "hooks" (list (dict "type" "command" "command" $command "timeout" 5))) -}}
+{{- $_ := set $hooks "SessionStart" $start -}}
+{{- $_ := set $config "hooks" $hooks -}}
+{{- $config | toJson -}}

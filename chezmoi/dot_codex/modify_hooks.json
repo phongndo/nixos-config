@@ -1,0 +1,11 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Rex owns its SessionStart hook here (see run_after_sync-rex-agents);
+      add the hook for sessions started outside a Rex terminal, and keep the
+      original text when nothing changes. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := includeTemplate "rex-outside-hook.tmpl" (deepCopy $current) | fromJson -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}
