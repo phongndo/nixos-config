@@ -6,7 +6,7 @@
       `mcpServers`. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $servers := mustMergeOverwrite (get $current "mcp" | default dict | deepCopy) (get $current "mcpServers" | default dict | deepCopy) -}}
-{{- $_ := set $servers "executor" (mustMergeOverwrite (get $servers "executor" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/executor-mcp")))) -}}
+{{- $_ := set $servers "executor" (mustMergeOverwrite (get $servers "executor" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "mcp"))) -}}
 {{- $_ := unset (get $servers "executor") "args" -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $_ := set $servers "1password" (mustMergeOverwrite (get $servers "1password" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/fx-1password-mcp")))) -}}

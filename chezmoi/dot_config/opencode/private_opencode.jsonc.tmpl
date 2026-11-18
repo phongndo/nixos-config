@@ -12,7 +12,7 @@
     "servers": {
       "executor": {
         "type": "local",
-        "command": ["{{ .chezmoi.homeDir }}/.local/bin/executor-mcp"],
+        "command": ["{{ .chezmoi.homeDir }}/.local/share/mise/shims/executor", "mcp"],
         "timeout": { "catalog": 30000, "execution": 30000 },
         "codemode": true
       }

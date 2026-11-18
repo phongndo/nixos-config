@@ -5,7 +5,7 @@
       Manual: on each host, sign in with `/login radius` in Pi; over SSH, choose
       the device code. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list) "exposure" "codemode" -}}
+{{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "args" (list "mcp") "exposure" "codemode" -}}
 {{- $radius := dict "url" "https://radius.pi.dev/mcp" "auth" (dict "provider" "radius") -}}
 {{- $servers := dict "executor" $executor "radius" $radius -}}
 {{- if eq .chezmoi.os "darwin" -}}

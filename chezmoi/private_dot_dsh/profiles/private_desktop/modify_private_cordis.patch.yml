@@ -2,7 +2,7 @@
 # DeepSeek Harness writes its own settings into this patch list. Own only the
 # Executor entry: drop any earlier copy of it (and an empty `[]`), keep every
 # other entry as the app wrote it, and append the current one. dsh scrubs the
-# environment of stdio servers, so pass HOME through for the wrapper.
+# environment of stdio servers, so pass HOME through for mise and Executor.
 # Home Manager activation runs this with a bare PATH; only macOS has the app,
 # so use its system tools.
 set -eu
@@ -18,8 +18,8 @@ cat <<YAML
   config:
     serverName: executor
     transport: stdio
-    command: $HOME/.local/bin/executor-mcp
-    args: []
+    command: $HOME/.local/share/mise/shims/executor
+    args: [mcp]
     env:
       HOME: $HOME
     startupTimeoutMs: 30000

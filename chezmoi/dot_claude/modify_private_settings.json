@@ -22,6 +22,15 @@
 {{- $denied = append $denied (dict "serverName" "claude.ai Executor") -}}
 {{- end -}}
 {{- $_ := set $merged "deniedMcpServers" $denied -}}
+{{- /* Service actions go through Executor's `execute`; hide its direct `call`
+      tool, as Codex does with disabled_tools. */ -}}
+{{- $permissions := get $merged "permissions" | default dict -}}
+{{- $deny := get $permissions "deny" | default (list) -}}
+{{- if not (has "mcp__executor__call" $deny) -}}
+{{-   $deny = append $deny "mcp__executor__call" -}}
+{{- end -}}
+{{- $_ := set $permissions "deny" $deny -}}
+{{- $_ := set $merged "permissions" $permissions -}}
 {{- /* Rex's own SessionStart hook (see run_after_sync-rex-agents) is silent
       outside a Rex terminal; add one that says how to use Rex there. */ -}}
 {{- $merged = includeTemplate "rex-outside-hook.tmpl" $merged | fromJson -}}

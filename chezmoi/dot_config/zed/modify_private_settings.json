@@ -46,7 +46,7 @@ def parse_jsonc(text):
 
 original = sys.stdin.read()
 settings = parse_jsonc(original or "{}")
-entry = {"command": str(Path.home() / ".local/bin/executor-mcp"), "args": [], "env": {}}
+entry = {"command": str(Path.home() / ".local/share/mise/shims/executor"), "args": ["mcp"], "env": {}}
 servers = settings.setdefault("context_servers", {})
 if servers.get("executor") == entry:
     sys.stdout.write(original)

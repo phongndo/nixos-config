@@ -4,13 +4,13 @@
       original text when nothing changes to avoid formatting churn. */ -}}
 {{- $current := .chezmoi.stdin | fromToml -}}
 {{- $merged := mustMergeOverwrite (deepCopy $current) (includeTemplate "codex-config.toml.tmpl" . | fromToml) -}}
-{{- /* Share the working OAuth store and refresh path with the other agents,
+{{- /* Use Executor's own CLI and its saved sign-in, like the other agents,
       instead of maintaining a second Codex-only HTTP login. Require Executor
       to finish loading so a failed connection cannot silently omit its tools.
-      Manual: on each host, run `executor-mcp --login`; see that wrapper for
-      the remote callback setup. Service actions still use code mode. */ -}}
+      Manual: on each host, run `executor login` once. Service actions still
+      use code mode. */ -}}
 {{- $servers := get $merged "mcp_servers" | default dict -}}
-{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-mcp") "args" (list) "startup_timeout_sec" 30 "required" true "disabled_tools" (list "call")) -}}
+{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "args" (list "mcp") "startup_timeout_sec" 30 "required" true "disabled_tools" (list "call")) -}}
 {{- $_ := set $merged "mcp_servers" $servers -}}
 {{- /* Account plugins take their on/off state from the ChatGPT account, so hide
       their apps locally, reading the app IDs from the installed plugins: the
