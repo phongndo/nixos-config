@@ -10,7 +10,6 @@
 let
   inherit (config.lib.dotfiles) immutable writable;
   home = config.home.homeDirectory;
-  alfredWorkflow = "Library/Application Support/Alfred/Alfred.alfredpreferences/workflows/user.workflow.63D398BB-A391-40E9-B356-24123A2B339E";
 
   # launchd restarts the daemon after any exit: at login it can exit cleanly
   # before Accessibility or Secure Keyboard Entry is ready. Home Manager waits
@@ -80,14 +79,6 @@ in
       LLVM_JOBS = "16";
       LLVM_LINK_JOBS = "4";
       LLVM_TEST_JOBS = "16";
-    };
-
-    # Alfred owns the workflow directory. Link its editable source files
-    # individually so activation never has to replace that directory.
-    file = {
-      "${alfredWorkflow}/focus-window.sh" = writable "config/alfred/appfocus/focus-window.sh";
-      "${alfredWorkflow}/info.plist" = writable "config/alfred/appfocus/info.plist";
-      "${alfredWorkflow}/list-windows.sh" = writable "config/alfred/appfocus/list-windows.sh";
     };
   };
 
