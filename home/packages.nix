@@ -5,7 +5,6 @@
     (with pkgs; [
       bat
       btop
-      deadnix
       eza
       fd
       ffmpeg
@@ -21,11 +20,9 @@
       lazygit
       neovim
       nixfmt
-      nixfmt-tree
       pkg-config
       python3
       ripgrep
-      statix
       tmux
       tree-sitter # Builds Neovim's syntax parsers.
       zellij

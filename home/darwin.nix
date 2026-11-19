@@ -61,6 +61,8 @@ in
   };
 
   home = {
+    shellAliases.hm = "sudo darwin-rebuild switch --flake \"$HOME/nix-config#y\"";
+
     packages = with pkgs; [
       browserpass
       pass

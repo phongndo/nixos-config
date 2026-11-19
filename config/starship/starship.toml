@@ -68,14 +68,7 @@ style = "bold mfd_green"
 format = "[λ]($style) "
 style = "bold mfd_red"
 
-[lua]
-disabled = true
-
-[python]
-disabled = true
-
 [palettes.mfd-mono]
-mfd_bg = "#0A0B0A"
 mfd_bright = "#F4F4FF"
 mfd_red = "#F36C7A"
 mfd_green = "#7DCE8C"

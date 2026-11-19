@@ -1,8 +1,5 @@
-ulimit -n 65536
-
-# Nix runs a development shell's shellHook after Bash reads .bashrc, so update
-# the flake indicator immediately before Starship draws each prompt. Finding
-# the originating root happens only once; changing directories uses builtins.
+# Nix runs shellHook after shell startup. Update the indicator before each
+# prompt and find the originating flake root once, using shell builtins.
 _nix_update_flake_prompt() {
   if [[ -z "${IN_NIX_SHELL:-}" ]]; then
     unset NIX_FLAKE_INSIDE NIX_FLAKE_OUTSIDE
@@ -39,4 +36,3 @@ _nix_update_flake_prompt() {
     export NIX_FLAKE_OUTSIDE=1
   fi
 }
-starship_precmd_user_func=_nix_update_flake_prompt

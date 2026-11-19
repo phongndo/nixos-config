@@ -1,13 +1,13 @@
 {
   config,
   lib,
-  configurationName,
-  rebuildCommand,
   pkgs,
   ...
 }:
 
 let
+  flakePromptInit = builtins.readFile ./flake-prompt.sh;
+
   # Rex supplies its CLI directory separately from PATH. Restore it after shell
   # setup so this works with local and remote Rex servers on any host.
   rexShellInit = ''
@@ -117,9 +117,6 @@ in
 
       # Git operations in this repository.
       dot = "git -C \"$HOME/nix-config\"";
-
-      # Rebuild the complete host; Home Manager is part of the system generation.
-      hm = "sudo ${rebuildCommand} switch --flake \"$HOME/nix-config#${configurationName}\"";
     };
   };
 
@@ -155,7 +152,15 @@ in
         (lib.mkOrder 920 ''
           unfunction dirname mkdir
         '')
-        (builtins.readFile ./zshrc)
+        ''
+          autoload -Uz edit-command-line
+          zle -N edit-command-line
+          bindkey '^G' edit-command-line
+
+          ${flakePromptInit}
+          precmd_functions+=(_nix_update_flake_prompt)
+          ulimit -n 65536
+        ''
         (lib.mkAfter ''
           source ${zoxideZshInit}
           source ${starshipZshInit}
@@ -242,7 +247,12 @@ in
         "histappend"
       ];
       initExtra = lib.mkMerge [
-        (builtins.readFile ./bashrc)
+        ''
+          ulimit -n 65536
+
+          ${flakePromptInit}
+          starship_precmd_user_func=_nix_update_flake_prompt
+        ''
         (lib.mkAfter ''
           source ${zoxideBashInit}
 

@@ -62,6 +62,8 @@ in
   home.sessionVariables = llvmBuildLimits;
   systemd.user.sessionVariables = llvmBuildLimits;
 
+  home.shellAliases.hm = "sudo nixos-rebuild switch --flake \"$HOME/nix-config#z\"";
+
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;

@@ -27,9 +27,3 @@ yabai -m config mouse_action2 resize
 
 # Faster app/window focus when not using the scripting addition.
 yabai -m config skip_window_focus_animation on
-
-# Clear earlier float-by-default trial rules. With no manage=off rule, yabai
-# automatically manages normal windows.
-for label in float-by-default system-settings messages facetime; do
-  yabai -m rule --remove "$label" 2>/dev/null || true
-done

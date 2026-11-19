@@ -26,8 +26,5 @@ for command in nix brew; do
 done
 
 cd "$repo"
-trap 'rm -f "$repo/result"' EXIT
-
-nix build .#darwinConfigurations.y.system
-sudo -v
-sudo ./result/sw/bin/darwin-rebuild switch --flake "$repo#y"
+system_path=$(nix build --no-link --print-out-paths .#darwinConfigurations.y.system)
+sudo "$system_path/sw/bin/darwin-rebuild" switch --flake "$repo#y"

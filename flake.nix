@@ -29,27 +29,81 @@
   };
 
   outputs =
-    { nixpkgs, ... }@inputs:
+    {
+      self,
+      nixpkgs,
+      nixpkgs-personal,
+      nixpkgs-unstable,
+      home-manager,
+      nix-darwin,
+      ...
+    }@inputs:
     let
-      mkSystem = import ./lib/mk-system.nix inputs;
+      inherit (nixpkgs) lib;
+      hosts = import ./hosts.nix;
+      specialArgs = { inherit hosts inputs; };
       systems = [
         "aarch64-darwin"
         "x86_64-linux"
       ];
+
+      shared =
+        homeModule:
+        { config, pkgs, ... }:
+        {
+          nixpkgs.config.allowUnfree = true;
+          system.configurationRevision = self.rev or self.dirtyRev or null;
+
+          # Trust the other host by name and tailnet address.
+          programs.ssh.knownHosts = lib.mapAttrs (_: host: {
+            extraHostNames = [ host.address ];
+            publicKey = host.hostKey;
+          }) (removeAttrs hosts [ config.networking.hostName ]);
+
+          home-manager = {
+            useUserPackages = true;
+            extraSpecialArgs = {
+              inherit hosts inputs;
+              unstablePkgs = import nixpkgs-unstable {
+                inherit (pkgs.stdenv.hostPlatform) system;
+                config.allowUnfree = true;
+              };
+            };
+            users.dp = {
+              imports = [
+                ./home
+                homeModule
+              ];
+              # Pin Home Manager's packages independently of the host packages.
+              _module.args.pkgsPath = nixpkgs-personal.outPath;
+              nixpkgs.config.allowUnfree = true;
+            };
+          };
+        };
     in
     {
-      darwinConfigurations.y = mkSystem {
-        name = "y";
+      darwinConfigurations.y = nix-darwin.lib.darwinSystem {
         system = "aarch64-darwin";
-        user = "dp";
+        inherit specialArgs;
+        modules = [
+          ./machines/darwin
+          ./users/dp/darwin.nix
+          home-manager.darwinModules.home-manager
+          (shared ./home/darwin.nix)
+        ];
       };
 
-      nixosConfigurations.z = mkSystem {
-        name = "z";
+      nixosConfigurations.z = lib.nixosSystem {
         system = "x86_64-linux";
-        user = "dp";
+        inherit specialArgs;
+        modules = [
+          ./machines/nixos
+          ./users/dp/nixos.nix
+          home-manager.nixosModules.home-manager
+          (shared ./home/linux.nix)
+        ];
       };
 
-      formatter = nixpkgs.lib.genAttrs systems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
+      formatter = lib.genAttrs systems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
     };
 }
