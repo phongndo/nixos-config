@@ -1,7 +1,9 @@
 {{- /* Shared defaults for new settings; existing per-machine preferences win.
      Only packages and shellPath are enforced by modify_settings.json. */ -}}
 {
-  "defaultTools": ["+codemode"],
+{{- /* +find/+grep: pi-fff overrides both in projects; in $HOME, where fff
+       indexing is off, the built-ins keep search working. */}}
+  "defaultTools": ["+codemode", "+find", "+grep"],
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
@@ -32,5 +34,8 @@
     "mermaid": "final"
   },
   "fullscreenExitOutput": "transcript",
-  "shellPath": "/etc/profiles/per-user/{{ .chezmoi.username }}/bin/bash"
+  "shellPath": "/etc/profiles/per-user/{{ .chezmoi.username }}/bin/bash",
+{{- /* Load the project's direnv/nix-direnv environment for every bash call
+       (~0.05-0.1 s cached), so commands rarely need `nix develop -c`. */}}
+  "shellCommandPrefix": "eval \"$(direnv export bash 2>/dev/null)\""
 }

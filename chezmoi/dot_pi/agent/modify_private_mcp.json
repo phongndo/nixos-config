@@ -5,8 +5,12 @@
       Manual: on each host, sign in with `/login radius` in Pi; over SSH, choose
       the device code. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "args" (list "mcp") "exposure" "codemode" -}}
-{{- $radius := dict "url" "https://radius.pi.dev/mcp" "auth" (dict "provider" "radius") -}}
+{{- $executor := dict "command" (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "args" (list "mcp") "exposure" "codemode" "description" "Gateway to the user's connected apps (GitHub, Google Workspace, Slack, Notion, Exa, Firecrawl and more): find tools with search, then run them with call or execute." -}}
+{{- /* The Radius org runs without credits: web search is free, while web fetch
+      ($0.05 per call) and image generation fail with HTTP 402, so they stay
+      hidden. Unhide them after adding credits. */ -}}
+{{- $radiusPaid := dict "tools_webFetch_run" "hidden" "tools_imageGeneration_run" "hidden" -}}
+{{- $radius := dict "url" "https://radius.pi.dev/mcp" "auth" (dict "provider" "radius") "description" "Free web search (tools_webSearch_run) for current information, plus the Radius admin API: organization, members, budgets, billing, models and artifacts." "toolExposure" $radiusPaid -}}
 {{- $servers := dict "executor" $executor "radius" $radius -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $_ := set $servers "1password" (dict "command" "1password-mcp") -}}
