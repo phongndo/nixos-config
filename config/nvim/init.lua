@@ -40,15 +40,19 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "dybdeskarphet/min.nvim",
     lazy = false,
     priority = 1000,
     -- The terminal's background shows through the editor and popups alike.
-    opts = { flavour = "mocha", transparent_background = true, float = { transparent = true } },
+    opts = {
+      flavor = "gruvbox",
+      transparent = true,
+      -- Also clear the native popup's (e.g. :buffer suggestions) kind and match cells.
+      overrides = { PmenuKind = { bg = "none" }, PmenuMatch = { bg = "none" } },
+    },
     config = function(_, opts)
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin")
+      require("min").setup(opts)
+      vim.cmd.colorscheme("min")
     end,
   },
   {
@@ -126,14 +130,26 @@ require("lazy").setup({
   {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
-    opts = {
-      options = {
-        theme = "auto",
-        globalstatus = true,
-        component_separators = "",
-        section_separators = "",
-      },
-    },
+    opts = function()
+      -- The colours come from the colorscheme, but only the mode pill gets a
+      -- background; the rest of the bar lets the terminal show through.
+      local theme = require("lualine.themes.auto")
+      for _, mode in pairs(theme) do
+        for name, section in pairs(mode) do
+          if name ~= "a" then
+            section.bg = "NONE"
+          end
+        end
+      end
+      return {
+        options = {
+          theme = theme,
+          globalstatus = true,
+          component_separators = "",
+          section_separators = "",
+        },
+      }
+    end,
   },
   {
     "dmtrKovalenko/fff",
@@ -168,6 +184,7 @@ require("lazy").setup({
     opts = {},
   },
 })
+vim.keymap.set("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy (plugins)" })
 
 -- Syntax highlighting: treesitter for every filetype with an installed parser.
 vim.api.nvim_create_autocmd("FileType", {
