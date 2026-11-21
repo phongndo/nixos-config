@@ -257,7 +257,13 @@ vim.diagnostic.config({
   severity_sort = true,
   float = { source = "if_many" },
 })
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setqflist, { desc = "All diagnostics to quickfix" })
+vim.keymap.set("n", "<leader>q", function()
+  if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
+    vim.cmd.cclose()
+  else
+    vim.diagnostic.setqflist()
+  end
+end, { desc = "Toggle all diagnostics in quickfix" })
 
 -- Neovim maps the rest of LSP: grn rename, gra code action, grr references,
 -- gri implementation, grt type definition, gO symbols, K hover, <C-s>
@@ -268,6 +274,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = args.buf, desc = "Go to declaration" })
   end,
 })
+
+-- Ctrl-h/j/k/l move between windows, and on into the neighbouring Rex pane at
+-- the edge (config/rex/init.lua passes these keys through to Neovim).
+for key, direction in pairs({ h = "left", j = "down", k = "up", l = "right" }) do
+  vim.keymap.set("n", "<C-" .. key .. ">", function()
+    local win = vim.api.nvim_get_current_win()
+    vim.cmd.wincmd(key)
+    if vim.api.nvim_get_current_win() == win and vim.env.REX_SESSION then
+      vim.system({ "rex", "focus", "-s", vim.env.REX_SESSION, direction })
+    end
+  end, { desc = "Window or Rex pane " .. direction })
+end
 
 -- Working alongside agents: pick up their edits to open files, and copy a
 -- file:line (or file:start-end) reference to paste into a prompt.
