@@ -4,6 +4,7 @@ vim.g.maplocalleader = " "
 local opt = vim.opt
 opt.number = true
 opt.relativenumber = true
+opt.signcolumn = "yes" -- keep diagnostics from shifting the text
 opt.termguicolors = true
 opt.wrap = false
 opt.scrolloff = 8
@@ -14,8 +15,12 @@ opt.expandtab = true
 opt.ignorecase = true
 opt.smartcase = true
 opt.undofile = true
+opt.updatetime = 250 -- CursorHold, used below to reload files agents change
 opt.splitbelow = true
 opt.splitright = true
+opt.wildoptions = "pum,fuzzy"
+opt.wildmode = "noselect:lastused,full"
+opt.winborder = "rounded" -- outlines transparent popups (hover, pickers, diagnostics)
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
@@ -35,19 +40,88 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "phongndo/origin.nvim",
+    "catppuccin/nvim",
+    name = "catppuccin",
     lazy = false,
     priority = 1000,
-    opts = { transparent = true },
+    -- The terminal's background shows through the editor and popups alike.
+    opts = { flavour = "mocha", transparent_background = true, float = { transparent = true } },
     config = function(_, opts)
-      require("origin").setup(opts)
-      vim.cmd.colorscheme("origin")
+      require("catppuccin").setup(opts)
+      vim.cmd.colorscheme("catppuccin")
     end,
   },
   {
     "nvim-treesitter/nvim-treesitter",
-    event = { "BufReadPost", "BufNewFile" },
+    lazy = false, -- the main branch doesn't support lazy-loading
     build = ":TSUpdate",
+    config = function()
+      -- Installs any that are missing, in the background. Neovim already
+      -- bundles c, lua, markdown, query, vim and vimdoc.
+      require("nvim-treesitter").install({
+        "bash",
+        "cpp",
+        "css",
+        "diff",
+        "javascript",
+        "json",
+        "llvm", -- LLVM IR (.ll)
+        "markdown_inline",
+        "mlir",
+        "nix",
+        "python",
+        "rust",
+        "tablegen", -- LLVM TableGen (.td)
+        "toml",
+        "tsx",
+        "typescript",
+        "yaml",
+        "zig",
+      })
+    end,
+  },
+  {
+    -- Only supplies server definitions (lsp/*.lua); setup is below.
+    "neovim/nvim-lspconfig",
+    lazy = false,
+  },
+  {
+    -- Completion only when asked: <C-n>/<C-p> open the menu and move through
+    -- it, <CR> accepts the selected item, <C-e> closes it.
+    "saghen/blink.cmp",
+    version = "1.*",
+    lazy = false, -- its LSP capabilities are set below, before servers start
+    opts = function()
+      local function open(cmp)
+        return cmp.show({ initial_selected_item_idx = 1 })
+      end
+      return {
+        keymap = {
+          preset = "none",
+          ["<C-n>"] = { "select_next", open, "fallback" },
+          ["<C-p>"] = { "select_prev", open, "fallback" },
+          ["<CR>"] = { "accept", "fallback" },
+          ["<C-e>"] = { "hide", "fallback" },
+          ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+          ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+          ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+          -- Jump between a completed function's argument placeholders.
+          ["<Tab>"] = { "snippet_forward", "fallback" },
+          ["<S-Tab>"] = { "snippet_backward", "fallback" },
+        },
+        completion = {
+          menu = { auto_show = false },
+          list = { selection = { preselect = false, auto_insert = false } },
+          documentation = { auto_show = true },
+          ghost_text = { enabled = false },
+        },
+        signature = { enabled = false }, -- Neovim's <C-s> shows it on demand
+        cmdline = { enabled = false },
+        sources = { default = { "lsp", "path", "buffer" } },
+        -- No downloaded native binary or Rust build needed on either Nix host.
+        fuzzy = { implementation = "lua" },
+      }
+    end,
   },
   {
     "nvim-lualine/lualine.nvim",
@@ -62,13 +136,30 @@ require("lazy").setup({
     },
   },
   {
-    "folke/snacks.nvim",
+    "dmtrKovalenko/fff",
+    lazy = false, -- fff initialises itself on first use
+    build = function(plugin)
+      -- CI skips release binaries for some commits, and fff's cargo fallback
+      -- needs rustup, which z doesn't have, so build those with its flake.
+      if pcall(require("fff.download").download_or_build_binary) then
+        return
+      end
+      local out = vim.system({ "nix", "run", ".#release" }, { cwd = plugin.dir }):wait()
+      if out.code ~= 0 then
+        error("fff build failed:\n" .. out.stderr)
+      end
+    end,
     keys = {
-      { "<leader>f", function() require("snacks").picker.files() end, desc = "Find files" },
-      { "<leader>/", function() require("snacks").picker.grep() end, desc = "Live grep" },
-      { "<leader>,", function() require("snacks").picker.buffers() end, desc = "Buffers" },
+      { "<leader>f", function() require("fff").find_files() end, desc = "Find files" },
+      { "<leader>/", function() require("fff").live_grep() end, desc = "Live grep" },
+      {
+        "<leader>*",
+        function() require("fff").live_grep_under_cursor() end,
+        mode = { "n", "x" },
+        desc = "Grep word or selection",
+      },
     },
-    opts = { picker = { enabled = true } },
+    opts = {},
   },
   {
     "stevearc/oil.nvim",
@@ -78,8 +169,132 @@ require("lazy").setup({
   },
 })
 
+-- Syntax highlighting: treesitter for every filetype with an installed parser.
 vim.api.nvim_create_autocmd("FileType", {
   callback = function(args)
     pcall(vim.treesitter.start, args.buf)
+  end,
+})
+
+-- Language servers. Each starts only if its executable is on PATH, so open
+-- Neovim inside the project (direnv) to use the toolchain-matched servers its
+-- development shell provides; home/packages.nix covers the rest. Keep compiler
+-- flags, Python environments, etc. in project configuration. Neovim also maps
+-- K (hover), [d / ]d (diagnostics), gO (symbols), <C-s> (signature help in
+-- Insert mode) and gq (format).
+vim.lsp.config("*", { capabilities = require("blink.cmp").get_lsp_capabilities() })
+vim.lsp.config("nixd", {
+  settings = {
+    nixd = { formatting = { command = { "nixfmt" } } },
+  },
+})
+-- The project's .venv (uv and friends), not whichever python is on PATH.
+vim.lsp.config("pyright", {
+  before_init = function(_, config)
+    local venv = vim.fs.find(".venv", { path = config.root_dir, upward = true, type = "directory" })[1]
+    if venv then
+      config.settings.python = config.settings.python or {}
+      config.settings.python.pythonPath = venv .. "/bin/python"
+    end
+  end,
+})
+-- Neovim's Lua API for config and plugin code; a project's .luarc.json wins.
+vim.lsp.config("lua_ls", {
+  on_init = function(client)
+    local root = client.workspace_folders and client.workspace_folders[1].name
+    if root and (vim.uv.fs_stat(root .. "/.luarc.json") or vim.uv.fs_stat(root .. "/.luarc.jsonc")) then
+      return
+    end
+    client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
+      runtime = { version = "LuaJIT", path = { "lua/?.lua", "lua/?/init.lua" } },
+      workspace = { checkThirdParty = false, library = { vim.env.VIMRUNTIME } },
+    })
+  end,
+  settings = { Lua = {} },
+})
+vim.lsp.enable({
+  -- C / C++: whichever clangd is on PATH, using the project's
+  -- compile_commands.json. LLVM and other Nix shells provide one matched to
+  -- their compiler; elsewhere on the Mac it's Xcode's. Don't force a sysroot in
+  -- ~/Library/Preferences/clangd/config.yaml: it overrides those shells' SDKs.
+  "clangd",
+  "rust_analyzer",
+  "ts_ls", -- JavaScript / TypeScript, including React JSX / TSX.
+  "pyright",
+  "lua_ls",
+  "nixd",
+  "bashls",
+  "jsonls",
+  "cssls",
+  -- Only from a project's shell or an LLVM build with MLIR:
+  "mlir_lsp_server",
+  "tblgen_lsp_server",
+  "zls",
+})
+
+-- Diagnostics: signs and underlines everywhere, the message only on the
+-- cursor's line. Neovim maps ]d / [d (next / previous), ]D / [D (last /
+-- first) and <C-w>d (full message in a float).
+vim.diagnostic.config({
+  virtual_text = { current_line = true },
+  severity_sort = true,
+  float = { source = "if_many" },
+})
+vim.keymap.set("n", "<leader>q", vim.diagnostic.setqflist, { desc = "All diagnostics to quickfix" })
+
+-- Neovim maps the rest of LSP: grn rename, gra code action, grr references,
+-- gri implementation, grt type definition, gO symbols, K hover, <C-s>
+-- signature help (Insert mode), <C-]> definition and gq format.
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = args.buf, desc = "Go to definition" })
+    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = args.buf, desc = "Go to declaration" })
+  end,
+})
+
+-- Working alongside agents: pick up their edits to open files, and copy a
+-- file:line (or file:start-end) reference to paste into a prompt.
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
+  command = "silent! checktime",
+})
+vim.keymap.set({ "n", "x" }, "<leader>y", function()
+  local first, last = vim.fn.line("v"), vim.fn.line(".")
+  if first > last then
+    first, last = last, first
+  end
+  local ref = vim.fn.expand("%:.") .. ":" .. first .. (first ~= last and "-" .. last or "")
+  vim.fn.setreg("+", ref)
+  vim.notify("Copied " .. ref)
+end, { desc = "Copy file:line reference" })
+
+-- fff has no buffer picker, so <leader>, opens :buffer with fuzzy suggestions
+-- that update as you type; <CR> takes the top one if none is selected, unless
+-- the argument is a buffer number.
+local function is_buffer_cmd()
+  local cmd, arg = vim.fn.getcmdline():match("^%s*(%a+)%s+(.-)%s*$")
+  return cmd ~= nil and vim.startswith("buffer", cmd), arg
+end
+vim.keymap.set("n", "<leader>,", ":buffer ", { desc = "Buffers" })
+vim.api.nvim_create_autocmd("CmdlineChanged", {
+  pattern = ":",
+  callback = function()
+    if is_buffer_cmd() then
+      vim.fn.wildtrigger()
+    end
+  end,
+})
+vim.api.nvim_create_autocmd("CmdlineLeavePre", {
+  pattern = ":",
+  callback = function()
+    local is_buffer, arg = is_buffer_cmd()
+    local info = vim.fn.cmdcomplete_info()
+    if
+      is_buffer
+      and not arg:match("^%d+$")
+      and info.selected == -1
+      and not vim.tbl_isempty(info.matches or {})
+    then
+      vim.fn.setcmdline("buffer " .. vim.fn.fnameescape(info.matches[1]))
+    end
   end,
 })
