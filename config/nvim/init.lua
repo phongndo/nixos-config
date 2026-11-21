@@ -40,19 +40,19 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "dybdeskarphet/min.nvim",
+    "ellisonleao/gruvbox.nvim",
     lazy = false,
     priority = 1000,
     -- The terminal's background shows through the editor and popups alike.
     opts = {
-      flavor = "gruvbox",
-      transparent = true,
-      -- Also clear the native popup's (e.g. :buffer suggestions) kind and match cells.
-      overrides = { PmenuKind = { bg = "none" }, PmenuMatch = { bg = "none" } },
+      transparent_mode = true,
+      -- Including the native popup (e.g. :buffer suggestions).
+      overrides = { Pmenu = { bg = "NONE" }, PmenuKind = { bg = "NONE" }, PmenuSbar = { bg = "NONE" } },
     },
     config = function(_, opts)
-      require("min").setup(opts)
-      vim.cmd.colorscheme("min")
+      require("gruvbox").setup(opts)
+      vim.o.background = "dark"
+      vim.cmd.colorscheme("gruvbox")
     end,
   },
   {

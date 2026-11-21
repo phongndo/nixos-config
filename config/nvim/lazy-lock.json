@@ -1,9 +1,9 @@
 {
   "blink.cmp": { "branch": "main", "commit": "78336bc89ee5365633bcf754d93df01678b5c08f" },
   "fff": { "branch": "main", "commit": "9a7b1c8fc1d20236a255bf3ddb24eeb761bd6bd9" },
+  "gruvbox.nvim": { "branch": "main", "commit": "48262cda6a8a921b159c8ec3e21b48ccd870b7b2" },
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
   "lualine.nvim": { "branch": "master", "commit": "221ce6b2d999187044529f49da6554a92f740a96" },
-  "min.nvim": { "branch": "main", "commit": "6ebcf3847b3aa42fe05b3c5c1ff33991a5af6007" },
   "nvim-lspconfig": { "branch": "master", "commit": "4648fd8ba5c678d7e2db75ae44ffac269bb589d8" },
   "nvim-treesitter": { "branch": "main", "commit": "52773f0d13a0c11d0c3ef33c14ab6ecc1c17148b" },
   "oil.nvim": { "branch": "master", "commit": "d3733d933833a0e59b813ecec99341527adf0c28" }
