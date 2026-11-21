@@ -86,8 +86,8 @@ require("lazy").setup({
     lazy = false,
   },
   {
-    -- Completion only when asked: <C-n>/<C-p> open the menu and move through
-    -- it, <CR> accepts the selected item, <C-e> closes it.
+    -- The menu opens as you type with nothing selected: <C-n>/<C-p> select,
+    -- <CR> accepts the selection (or is a plain newline), <C-e> closes it.
     "saghen/blink.cmp",
     version = "1.*",
     lazy = false, -- its LSP capabilities are set below, before servers start
@@ -110,7 +110,7 @@ require("lazy").setup({
           ["<S-Tab>"] = { "snippet_backward", "fallback" },
         },
         completion = {
-          menu = { auto_show = false },
+          menu = { auto_show = true },
           list = { selection = { preselect = false, auto_insert = false } },
           documentation = { auto_show = true },
           ghost_text = { enabled = false },
