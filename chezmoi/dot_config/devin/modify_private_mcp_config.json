@@ -3,7 +3,7 @@
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $merged := deepCopy $current -}}
 {{- $servers := get $merged "mcpServers" | default dict -}}
-{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/share/mise/shims/executor") "args" (list "mcp") "transport" "stdio") -}}
+{{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-token") "args" (list "mcp") "transport" "stdio") -}}
 {{- $_ := set $merged "mcpServers" $servers -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}

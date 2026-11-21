@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Runs mise's Executor CLI with this host's personal access token, so every
+# agent's `executor mcp` stays signed in. An `executor login` grant is refused
+# once the browser session that approved it expires, while a token without an
+# expiry lasts until it is revoked. Without a token file this is plain
+# `executor`, which falls back to the login.
+# Manual: on each host, save the token, EXECUTOR_ACCESS_TOKEN in the 1Password
+# Environment "agents" (created at https://app.executor.sh/account/tokens for
+# organization phony, with no expiry), to ~/.config/executor/access-token
+# readable only by you.
+set -euo pipefail
+token="${XDG_CONFIG_HOME:-$HOME/.config}/executor/access-token"
+if [[ -z "${EXECUTOR_ACCESS_TOKEN:-}" && -r "$token" ]]; then
+  EXECUTOR_ACCESS_TOKEN="$(<"$token")"
+  export EXECUTOR_ACCESS_TOKEN
+fi
+exec "$HOME/.local/share/mise/shims/executor" "$@"

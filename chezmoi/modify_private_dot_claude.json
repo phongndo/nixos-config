@@ -13,7 +13,7 @@ if [ ! -x "$jq" ]; then
 fi
 [ -s "$current" ] || printf '{}' >"$current"
 entry='{type: "stdio", command: $command, args: ["mcp"]}'
-command="$HOME/.local/share/mise/shims/executor"
+command="$HOME/.local/bin/executor-token"
 if "$jq" -e --arg command "$command" ".mcpServers.executor == $entry" "$current" >/dev/null; then
   cat "$current"
 else

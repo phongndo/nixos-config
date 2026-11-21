@@ -15,10 +15,11 @@ pi = "latest"
 # Manual: on each host, run `fx login codex`.
 "github:vercel-labs/fx" = "latest"
 node = "26"
-# Executor's own CLI serves Executor Cloud to every agent: `executor mcp` is
-# their stdio MCP server. Pinned because the 2.x line is a fast-moving beta;
-# bump deliberately. Manual: on each host, run `executor login` once. Connect
-# provider accounts at https://app.executor.sh/org/me-9f65b0.
+# Executor's own CLI serves Executor Cloud to every agent: `executor mcp`,
+# run through ~/.local/bin/executor-token, is their stdio MCP server. Pinned
+# because the 2.x line is a fast-moving beta; bump deliberately. Manual: on
+# each host, save an Executor access token as `executor-token` describes.
+# Connect provider accounts at https://app.executor.sh/org/phony.
 "npm:executor" = "2.0.0-beta.60"
 # Personal tools follow published releases independently of Nix.
 "github:phongndo/mark" = "latest"

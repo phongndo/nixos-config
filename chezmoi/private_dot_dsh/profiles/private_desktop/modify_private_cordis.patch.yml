@@ -18,7 +18,7 @@ cat <<YAML
   config:
     serverName: executor
     transport: stdio
-    command: $HOME/.local/share/mise/shims/executor
+    command: $HOME/.local/bin/executor-token
     args: [mcp]
     env:
       HOME: $HOME
