@@ -207,12 +207,13 @@ require("lazy").setup({
     opts = {},
   },
   {
-    -- Buffers, which fff doesn't pick. Loads on first use.
-    "nvim-mini/mini.pick",
+    -- Buffers, which fff doesn't pick. Only the picker is enabled; it loads on
+    -- first use.
+    "folke/snacks.nvim",
     keys = {
-      { "<leader>,", function() require("mini.pick").builtin.buffers() end, desc = "Buffers" },
+      { "<leader>,", function() require("snacks").picker.buffers() end, desc = "Buffers" },
     },
-    opts = {},
+    opts = { picker = { enabled = true } },
   },
 }, {
   -- This file is a read-only link into the Nix store, so there are no edits to
