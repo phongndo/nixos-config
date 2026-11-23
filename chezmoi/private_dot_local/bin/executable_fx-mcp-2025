@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# fx tries server/discover before initialize. Answer the probe for servers
+# that support the 2025 protocol and hand the rest of the stream to them.
+set -euo pipefail
+IFS= read -r request
+if request_id=$(jq -cer 'select(.method == "server/discover") | .id | select(. != null) | tojson' <<<"$request"); then
+  printf '{"jsonrpc":"2.0","id":%s,"error":{"code":-32601,"message":"Method not found"}}\n' "$request_id"
+  exec "$@"
+fi
+{ printf '%s\n' "$request"; exec cat; } | "$@"

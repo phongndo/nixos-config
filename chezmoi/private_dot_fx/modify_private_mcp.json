@@ -1,6 +1,5 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Own the Executor entry, and on macOS the 1Password entry, whose server
-      runs in 1Password's desktop app and needs fx-1password-mcp to connect;
+{{- /* Manage Executor and Plannotator on both hosts, plus 1Password on macOS. Other
       servers added with `/mcp add` stay as fx wrote them. fx reads the legacy
       `mcp` key but not both keys in one file, so move its servers under
       `mcpServers`. */ -}}
@@ -8,6 +7,10 @@
 {{- $servers := mustMergeOverwrite (get $current "mcp" | default dict | deepCopy) (get $current "mcpServers" | default dict | deepCopy) -}}
 {{- $_ := set $servers "executor" (mustMergeOverwrite (get $servers "executor" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/executor-token") "mcp"))) -}}
 {{- $_ := unset (get $servers "executor") "args" -}}
+{{- /* Plannotator's stdio bridge supports initialize. Point it to the same
+      Inbox the user opens from their XDG-configured shell. */ -}}
+{{- $bin := joinPath .chezmoi.homeDir ".local/bin" -}}
+{{- $_ := set $servers "plannotator-inbox" (dict "type" "stdio" "command" (list (joinPath $bin "fx-mcp-2025") (joinPath $bin "plannotator") "inbox" "mcp") "env" (dict "PLANNOTATOR_DATA_DIR" (joinPath .chezmoi.homeDir ".local/share/plannotator"))) -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $_ := set $servers "1password" (mustMergeOverwrite (get $servers "1password" | default dict) (dict "type" "stdio" "command" (list (joinPath .chezmoi.homeDir ".local/bin/fx-1password-mcp")))) -}}
 {{-   $_ := unset (get $servers "1password") "args" -}}
