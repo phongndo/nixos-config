@@ -94,7 +94,7 @@ require("lazy").setup({
     -- <CR> accepts the selection (or is a plain newline), <C-e> closes it.
     "saghen/blink.cmp",
     version = "1.*",
-    lazy = false, -- its LSP capabilities are set below, before servers start
+    lazy = false, -- it advertises its LSP capabilities before any server starts
     opts = function()
       local function open(cmp)
         return cmp.show({ initial_selected_item_idx = 1 })
@@ -183,6 +183,19 @@ require("lazy").setup({
     keys = { { "-", "<cmd>Oil<cr>", desc = "Open parent directory" } },
     opts = {},
   },
+  {
+    -- Buffers, which fff doesn't pick. Loads on first use.
+    "nvim-mini/mini.pick",
+    keys = {
+      { "<leader>,", function() require("mini.pick").builtin.buffers() end, desc = "Buffers" },
+    },
+    opts = {},
+  },
+}, {
+  -- This file is a read-only link into the Nix store, so there are no edits to
+  -- watch for, and no plugin here needs luarocks.
+  change_detection = { enabled = false },
+  rocks = { enabled = false },
 })
 vim.keymap.set("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy (plugins)" })
 
@@ -199,7 +212,6 @@ vim.api.nvim_create_autocmd("FileType", {
 -- flags, Python environments, etc. in project configuration. Neovim also maps
 -- K (hover), [d / ]d (diagnostics), gO (symbols), <C-s> (signature help in
 -- Insert mode) and gq (format).
-vim.lsp.config("*", { capabilities = require("blink.cmp").get_lsp_capabilities() })
 vim.lsp.config("nixd", {
   settings = {
     nixd = { formatting = { command = { "nixfmt" } } },
@@ -289,35 +301,3 @@ vim.keymap.set({ "n", "x" }, "<leader>y", function()
   vim.fn.setreg("+", ref)
   vim.notify("Copied " .. ref)
 end, { desc = "Copy file:line reference" })
-
--- fff has no buffer picker, so <leader>, opens :buffer with fuzzy suggestions
--- that update as you type; <CR> takes the top one if none is selected, unless
--- the argument is a buffer number.
-local function is_buffer_cmd()
-  local cmd, arg = vim.fn.getcmdline():match("^%s*(%a+)%s+(.-)%s*$")
-  return cmd ~= nil and vim.startswith("buffer", cmd), arg
-end
-vim.keymap.set("n", "<leader>,", ":buffer ", { desc = "Buffers" })
-vim.api.nvim_create_autocmd("CmdlineChanged", {
-  pattern = ":",
-  callback = function()
-    if is_buffer_cmd() then
-      vim.fn.wildtrigger()
-    end
-  end,
-})
-vim.api.nvim_create_autocmd("CmdlineLeavePre", {
-  pattern = ":",
-  callback = function()
-    local is_buffer, arg = is_buffer_cmd()
-    local info = vim.fn.cmdcomplete_info()
-    if
-      is_buffer
-      and not arg:match("^%d+$")
-      and info.selected == -1
-      and not vim.tbl_isempty(info.matches or {})
-    then
-      vim.fn.setcmdline("buffer " .. vim.fn.fnameescape(info.matches[1]))
-    end
-  end,
-})
