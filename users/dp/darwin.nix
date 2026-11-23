@@ -44,19 +44,14 @@
       "chatgpt"
       "claude"
       "deepseek-harness"
-      "devin-desktop"
-      "devin-desktop@next"
-      "lm-studio"
       "opencode-desktop"
       "t3-code"
 
       # Development
       "docker-desktop"
-      "kitty"
       "mono-mdk"
       "utm"
       "zed"
-      "zed-delta"
 
       # Browsers
       "google-chrome"

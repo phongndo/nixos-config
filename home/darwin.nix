@@ -73,8 +73,6 @@ in
       (writeShellScriptBin "t3-update" ''exec ssh z t3-update "$@"'')
     ];
 
-    sessionPath = lib.mkAfter [ "$HOME/.lmstudio/bin" ];
-
     # ~/code/llvm-dev's justfile reads these. y's 16 cores, not its 64 GiB,
     # limit LLVM builds, so compiles, links, and tests can all run wide.
     sessionVariables = {

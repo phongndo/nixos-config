@@ -62,6 +62,10 @@ web-telemetry.jsonl
 # Rex installs and updates its own skill in the shared skill folder.
 .agents/skills/rex
 
+# Plannotator's installer owns its shared skills on both hosts.
+.agents/skills/plannotator
+.agents/skills/plannotator-*
+
 # Machine keys are provisioned directly, never committed or synced.
 .ssh/id_*
 
@@ -71,13 +75,11 @@ web-telemetry.jsonl
 {{ end }}
 
 # Plugin skills serve the 1Password MCP server, which runs in 1Password's
-# desktop app; only macOS has the app. Likewise only macOS has the Devin,
-# LM Studio, and GitHub Copilot apps whose Executor entries are managed.
+# desktop app; only macOS has the app. Likewise only macOS has the GitHub
+# Copilot app whose Executor entry is managed.
 {{ if ne .chezmoi.os "darwin" }}
 .agents/plugin-skills
-.codeium
 .copilot
-.lmstudio
 .fx/skills/1password-environments
 .local/bin/fx-1password-mcp
 {{ end }}
