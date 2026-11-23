@@ -213,7 +213,51 @@ require("lazy").setup({
     keys = {
       { "<leader>,", function() require("snacks").picker.buffers() end, desc = "Buffers" },
     },
-    opts = { picker = { enabled = true } },
+    opts = function()
+      -- Mirror fff's picker: one rounded frame at 80% of the screen, the
+      -- prompt along the bottom with the best match just above it, and the
+      -- preview beside the list, or above it below 130 columns.
+      local list_and_input = {
+        box = "vertical",
+        { win = "list", border = "none" },
+        { win = "input", height = 1, border = "top" },
+      }
+      local frame = {
+        width = 0.8,
+        height = 0.8,
+        border = "rounded",
+        title = "{title} {live} {flags}",
+        title_pos = "left",
+      }
+      return {
+        picker = {
+          enabled = true,
+          layouts = {
+            fff = {
+              reverse = true,
+              layout = vim.tbl_extend("force", frame, {
+                box = "horizontal",
+                list_and_input,
+                { win = "preview", title = "{preview}", width = 0.5, border = "left" },
+              }),
+            },
+            fff_narrow = {
+              reverse = true,
+              layout = vim.tbl_extend("force", frame, {
+                box = "vertical",
+                { win = "preview", title = "{preview}", height = 0.5, border = "bottom" },
+                list_and_input,
+              }),
+            },
+          },
+          layout = {
+            preset = function()
+              return vim.o.columns >= 130 and "fff" or "fff_narrow"
+            end,
+          },
+        },
+      }
+    end,
   },
 }, {
   -- This file is a read-only link into the Nix store, so there are no edits to
