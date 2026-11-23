@@ -1,5 +1,5 @@
 {{- /* Shared defaults for new settings; existing per-machine preferences win.
-     Only packages and shellPath are enforced by modify_settings.json. */ -}}
+     Only packages, shellPath, and theme are enforced by modify_settings.json. */ -}}
 {
 {{- /* +find/+grep: pi-fff overrides both in projects; in $HOME, where fff
        indexing is off, the built-ins keep search working. */}}
@@ -8,7 +8,8 @@
   "quietStartup": true,
   "enableInstallTelemetry": false,
   "doubleEscapeAction": "tree",
-  "theme": "origin",
+  {{- /* github-dark-high-contrast lives in ~/code/pi-extensions/themes. */}}
+  "theme": "github-dark-high-contrast",
   "packages": [
     "npm:@ff-labs/pi-fff",
     "{{ .chezmoi.homeDir }}/code/pi-extensions"

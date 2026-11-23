@@ -1,0 +1,14 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* OpenCode keeps its TUI preferences here. Preserve local choices and
+      enforce the GitHub Dark High Contrast theme
+      (themes/github-dark-high-contrast.json), whose backgrounds are "none". */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $merged := mustMergeOverwrite (dict "$schema" "https://opencode.ai/v2/cli.json") (deepCopy $current) -}}
+{{- $theme := get $merged "theme" | default dict -}}
+{{- $_ := set $theme "name" "github-dark-high-contrast" -}}
+{{- $_ := set $merged "theme" $theme -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

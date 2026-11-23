@@ -40,19 +40,28 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "ellisonleao/gruvbox.nvim",
+    "projekt0n/github-nvim-theme",
+    name = "github-theme",
     lazy = false,
     priority = 1000,
-    -- The terminal's background shows through the editor and popups alike.
-    opts = {
-      transparent_mode = true,
-      -- Including the native popup (e.g. :buffer suggestions).
-      overrides = { Pmenu = { bg = "NONE" }, PmenuKind = { bg = "NONE" }, PmenuSbar = { bg = "NONE" } },
-    },
-    config = function(_, opts)
-      require("gruvbox").setup(opts)
-      vim.o.background = "dark"
-      vim.cmd.colorscheme("gruvbox")
+    config = function()
+      -- The terminal's background shows through the editor and popups alike,
+      -- including the native popup (e.g. :buffer suggestions).
+      local clear = { bg = "NONE" }
+      require("github-theme").setup({
+        options = { transparent = true, darken_floats = false },
+        groups = {
+          github_dark_high_contrast = {
+            NormalFloat = clear,
+            FloatBorder = clear,
+            Pmenu = clear,
+            PmenuKind = clear,
+            PmenuExtra = clear,
+            PmenuSbar = clear,
+          },
+        },
+      })
+      vim.cmd.colorscheme("github_dark_high_contrast")
     end,
   },
   {

@@ -2,10 +2,13 @@
 {{- /* fx writes its sign-in, model, and preference state here. Seed full
       access, as the other agents have, and preserve local choices; fx saves
       full access as "yolo". Enforce updates off: fx would replace its binary
-      inside mise's install folder, and mise already tracks its releases. */ -}}
+      inside mise's install folder, and mise already tracks its releases.
+      Enforce the GitHub Dark High Contrast theme
+      (themes/github-dark-high-contrast.json). */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $merged := mustMergeOverwrite (dict "permission_mode" "full-access") (deepCopy $current) -}}
 {{- $_ := set $merged "auto_upgrade" false -}}
+{{- $_ := set $merged "theme" "github-dark-high-contrast" -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

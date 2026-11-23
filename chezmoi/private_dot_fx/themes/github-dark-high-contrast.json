@@ -1,0 +1,63 @@
+{
+  "name": "github-dark-high-contrast",
+  "type": "dark",
+  "colors": {
+    "divider": "#525964",
+    "hint": "#f0f3f6",
+    "statusline": "#9ea7b3",
+    "tag": {
+      "fg": "#f0f3f6",
+      "bold": true
+    },
+    "subtitle": {
+      "fg": "#f0f3f6",
+      "bold": true
+    },
+    "system_notice_label": {
+      "fg": "#f0b72f",
+      "bold": true
+    },
+    "system_notice_text": "#9ea7b3",
+    "dim": "#9ea7b3",
+    "warning": "#f0b72f",
+    "green": "#26cd4d",
+    "red": "#ff6a69",
+    "diff_added": "#26cd4d",
+    "diff_removed": "#ff6a69",
+    "diff_added_marker": "#26cd4d",
+    "diff_removed_marker": "#ff6a69",
+    "approval_button_active": {
+      "fg": "#0a0c10",
+      "bg": "#71b7ff",
+      "bold": true
+    },
+    "approval_button_inactive": {
+      "fg": "#f0f3f6",
+      "bg": "#272b33"
+    },
+    "selected_completion": {
+      "fg": "#71b7ff",
+      "bold": true
+    },
+    "permission_auto": "#cb9eff",
+    "user_card_marker": "#71b7ff",
+    "user_card_accent": "#f0f3f6",
+    "inline_code": "#addcff",
+    "task_completed": "#26cd4d",
+    "tool_stdout": "#9ea7b3",
+    "tool_stderr": "#fe9a2d",
+    "link": "#71b7ff"
+  },
+  "syntax": {
+    "keyword": "#ff9492",
+    "string": "#addcff",
+    "number": "#91cbff",
+    "comment": {
+      "fg": "#bdc4cc",
+      "italic": true
+    },
+    "function": "#dbb7ff",
+    "variable": "#ffb757",
+    "operator": "#ff9492"
+  }
+}

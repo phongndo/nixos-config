@@ -2,7 +2,12 @@ layout = "dynamic"
 line_wrapping = false
 live_reload = true
 syntax_highlighting = true
-theme = "origin"
+theme = "github-dark-high-contrast"
+
+# Let the terminal (Rex) draw the background under the theme.
+[colors]
+bg = "default"
+gutter_bg = "default"
 
 [diff]
 context_expand = 20

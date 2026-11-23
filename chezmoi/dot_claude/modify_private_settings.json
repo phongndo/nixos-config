@@ -1,8 +1,11 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* Seed shared preferences, preserve machine-local settings, and enforce
-      auto memory and commit/PR attribution off and the Bash tool's shell. */ -}}
+      the GitHub Dark High Contrast theme
+      (themes/github-dark-high-contrast.json), auto memory and commit/PR
+      attribution off, and the Bash tool's shell. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
-{{- $merged := mustMergeOverwrite (dict "theme" "dark" "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
+{{- $merged := mustMergeOverwrite (dict "permissions" (dict "defaultMode" "bypassPermissions") "skipDangerousModePermissionPrompt" true) (deepCopy $current) -}}
+{{- $_ := set $merged "theme" "custom:github-dark-high-contrast" -}}
 {{- $_ := set $merged "autoMemoryEnabled" false -}}
 {{- $_ := set $merged "attribution" (dict "commit" "" "pr" "") -}}
 {{- /* Run the Bash tool with Nix bash on both hosts. */ -}}

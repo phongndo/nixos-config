@@ -1,10 +1,10 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* Pi writes preferences and runtime state here. Seed missing defaults,
       preserve local choices (including false/empty values), and keep the
-      package list and shell managed so shared changes still reach both hosts. */ -}}
+      package list, shell, and theme managed so shared changes still reach both hosts. */ -}}
 {{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $defaults := includeTemplate "pi-settings.json.tmpl" . | fromJson -}}
-{{- $merged := mustMergeOverwrite (deepCopy $defaults) $current (dict "packages" $defaults.packages "shellPath" $defaults.shellPath) -}}
+{{- $merged := mustMergeOverwrite (deepCopy $defaults) $current (dict "packages" $defaults.packages "shellPath" $defaults.shellPath "theme" $defaults.theme) -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}
 {{- .chezmoi.stdin -}}
 {{- else -}}

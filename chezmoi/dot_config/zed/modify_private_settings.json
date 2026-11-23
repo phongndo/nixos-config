@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Merge Executor into Zed's JSONC settings, preserving all other settings."""
+"""Merge Executor and the GitHub Dark High Contrast theme into Zed's JSONC
+settings, preserving all other settings."""
 import json
 from pathlib import Path
 import sys
@@ -46,10 +47,15 @@ def parse_jsonc(text):
 
 original = sys.stdin.read()
 settings = parse_jsonc(original or "{}")
+before = json.dumps(settings, sort_keys=True)
 entry = {"command": str(Path.home() / ".local/bin/executor-token"), "args": ["mcp"], "env": {}}
-servers = settings.setdefault("context_servers", {})
-if servers.get("executor") == entry:
+settings.setdefault("context_servers", {})["executor"] = entry
+# The github-theme extension provides it. Zed is a window rather than a
+# terminal, so it keeps the theme's own background (#0a0c10), which is close
+# to Rex's.
+settings["theme"] = "GitHub Dark High Contrast"
+settings.setdefault("auto_install_extensions", {})["github-theme"] = True
+if json.dumps(settings, sort_keys=True) == before:
     sys.stdout.write(original)
 else:
-    servers["executor"] = entry
     sys.stdout.write(json.dumps(settings, indent=2, ensure_ascii=False) + "\n")
