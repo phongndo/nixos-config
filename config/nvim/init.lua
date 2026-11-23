@@ -157,6 +157,20 @@ require("lazy").setup({
           component_separators = "",
           section_separators = "",
         },
+        sections = {
+          -- No fileformat: its icon is the line-ending style (Tux for LF),
+          -- not the OS. Encoding shows only when it isn't the usual UTF-8.
+          lualine_x = {
+            {
+              "encoding",
+              cond = function()
+                local enc = vim.bo.fileencoding
+                return enc ~= "" and enc ~= "utf-8"
+              end,
+            },
+            "filetype",
+          },
+        },
       }
     end,
   },
