@@ -62,10 +62,6 @@ web-telemetry.jsonl
 # Rex installs and updates its own skill in the shared skill folder.
 .agents/skills/rex
 
-# Plannotator's installer owns its shared skills on both hosts.
-.agents/skills/plannotator
-.agents/skills/plannotator-*
-
 # Machine keys are provisioned directly, never committed or synced.
 .ssh/id_*
 
