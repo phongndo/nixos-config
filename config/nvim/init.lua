@@ -190,15 +190,15 @@ require("lazy").setup({
     end,
     keys = {
       { "<leader>f", function() require("fff").find_files() end, desc = "Find files" },
-      { "<leader>/", function() require("fff").live_grep() end, desc = "Live grep" },
+      { "<leader>/", function() require("fff").live_grep({ title = "live grep" }) end, desc = "Live grep" },
       {
         "<leader>*",
-        function() require("fff").live_grep_under_cursor() end,
+        function() require("fff").live_grep_under_cursor({ title = "live grep" }) end,
         mode = { "n", "x" },
         desc = "Grep word or selection",
       },
     },
-    opts = {},
+    opts = { prompt = "", title = "files" },
   },
   {
     "stevearc/oil.nvim",
@@ -232,6 +232,20 @@ require("lazy").setup({
       return {
         picker = {
           enabled = true,
+          -- Rows and prompt as fff draws them: "name dir", no prompt icon.
+          prompt = "",
+          formatters = { file = { filename_first = true } },
+          icons = { files = { enabled = false } },
+          sources = {
+            buffers = {
+              title = "buffers",
+              format = "file",
+              -- Drop the ":line" suffix; switching restores the cursor anyway.
+              transform = function(item)
+                item.pos = nil
+              end,
+            },
+          },
           layouts = {
             fff = {
               reverse = true,
