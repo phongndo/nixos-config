@@ -41,6 +41,7 @@
     taps = [ "anomalyco/tap" ];
     casks = [
       # Agents and AI
+      "antigravity"
       "chatgpt"
       "claude"
       "deepseek-harness"
