@@ -1,0 +1,10 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Seed full access. agy's default color scheme already follows the terminal. */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $defaults := dict "agentMode" "accept-edits" "toolPermission" "always-proceed" "allowNonWorkspaceAccess" true -}}
+{{- $merged := mustMergeOverwrite $defaults $current -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

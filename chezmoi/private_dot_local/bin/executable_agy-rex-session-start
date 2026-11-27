@@ -1,0 +1,13 @@
+#!/bin/sh
+# agy's SessionStart hook expects Rex's message inside an injectSteps response.
+set -eu
+if ! command -v rex >/dev/null 2>&1; then
+  printf '%s\n' '{}'
+  exit 0
+fi
+if [ -n "${REX_SESSION:-}" ]; then
+  context=$(rex __internal session-start --agent agy)
+else
+  context='You are outside Rex. Before using Rex, load the rex skill and create a session for this task with rex new <task-label> -c <dir> --json. Use its session_id and leave existing sessions alone.'
+fi
+jq -n --arg context "$context" '{injectSteps: [{systemMessage: {systemMessage: $context}}]}'

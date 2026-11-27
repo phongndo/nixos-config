@@ -1,0 +1,28 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- /* agy 1.5.18 requires absolute paths for global manifest entries. */ -}}
+{{- $merged := deepCopy $current -}}
+{{- $entries := get $merged "entries" | default list -}}
+{{- $folders := list ".agents/skills" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $folders = append $folders ".agents/plugin-skills" -}}
+{{- end -}}
+{{- $existing := list -}}
+{{- range $entries -}}
+{{-   if and (hasPrefix "~/" .path) (has (trimPrefix "~/" .path) $folders) -}}
+{{-     $_ := set . "path" (joinPath $.chezmoi.homeDir (trimPrefix "~/" .path)) -}}
+{{-   end -}}
+{{-   $existing = append $existing .path -}}
+{{- end -}}
+{{- range $folders -}}
+{{-   $path := joinPath $.chezmoi.homeDir . -}}
+{{-   if not (has $path $existing) -}}
+{{-     $entries = append $entries (dict "path" $path) -}}
+{{-   end -}}
+{{- end -}}
+{{- $_ := set $merged "entries" $entries -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

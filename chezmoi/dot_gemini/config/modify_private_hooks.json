@@ -1,0 +1,9 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $handler := dict "type" "command" "command" `"$HOME/.local/bin/agy-rex-session-start"` "timeout" 5 -}}
+{{- $merged := mustMergeOverwrite (deepCopy $current) (dict "rex" (dict "SessionStart" (list $handler))) -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

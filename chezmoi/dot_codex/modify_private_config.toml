@@ -11,12 +11,9 @@
       `executor-token` describes. Service actions still use code mode. */ -}}
 {{- $servers := get $merged "mcp_servers" | default dict -}}
 {{- $_ := set $servers "executor" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/executor-token") "args" (list "mcp") "startup_timeout_sec" 30 "required" true "disabled_tools" (list "call")) -}}
-{{- /* Alive2 and Compiler Explorer for LLVM work, on hosts with llvm-dev. */ -}}
-{{- $alive2 := joinPath .chezmoi.homeDir "code/llvm-dev/bin/alive-mcp" -}}
-{{- if stat $alive2 -}}
-{{-   $_ := set $servers "alive2" (dict "command" $alive2 "startup_timeout_sec" 60 "tool_timeout_sec" 900) -}}
-{{-   $_ := set $servers "godbolt" (dict "url" "https://godbolt.org/mcp") -}}
-{{- end -}}
+{{- /* The LLVM checkout supplies these through its project config. */ -}}
+{{- $_ := unset $servers "alive2" -}}
+{{- $_ := unset $servers "godbolt" -}}
 {{- $_ := set $merged "mcp_servers" $servers -}}
 {{- /* Account plugins take their on/off state from the ChatGPT account, so hide
       their apps locally, reading the app IDs from the installed plugins: the

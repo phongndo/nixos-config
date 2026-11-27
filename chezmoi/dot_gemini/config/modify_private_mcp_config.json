@@ -1,0 +1,27 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
+{{- $executor := joinPath .chezmoi.homeDir ".local/bin/executor-token" -}}
+{{- $servers := dict "executor" (dict "command" $executor "args" (list "mcp")) -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{- /* Like fx, agy sends server/discover before 1Password's initialize handshake. */ -}}
+{{-   $_ := set $servers "1password" (dict "command" (joinPath .chezmoi.homeDir ".local/bin/fx-1password-mcp")) -}}
+{{- end -}}
+{{- /* Replace each managed connection as a unit. agy owns its enable switch and tool filters. */ -}}
+{{- $merged := deepCopy $current -}}
+{{- $configured := get $merged "mcpServers" | default dict -}}
+{{- /* The LLVM checkout supplies these through its project config. */ -}}
+{{- $_ := unset $configured "alive2" -}}
+{{- $_ := unset $configured "godbolt" -}}
+{{- range $name, $connection := $servers -}}
+{{-   $local := pick (get $configured $name | default dict) "disabled" "enabledTools" "disabledTools" "tools" -}}
+{{-   if eq $name "executor" -}}
+{{-     $_ := set $local "disabledTools" (uniq (append (get $local "disabledTools" | default list) "call")) -}}
+{{-   end -}}
+{{-   $_ := set $configured $name (mustMergeOverwrite $local $connection) -}}
+{{- end -}}
+{{- $_ := set $merged "mcpServers" $configured -}}
+{{- if eq ($current | toJson) ($merged | toJson) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{ $merged | toPrettyJson }}
+{{- end -}}

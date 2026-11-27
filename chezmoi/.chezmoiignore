@@ -62,6 +62,17 @@ web-telemetry.jsonl
 # Rex installs and updates its own skill in the shared skill folder.
 .agents/skills/rex
 
+# Antigravity keeps conversations, credentials, logs and app state under .gemini.
+.gemini/**
+!.gemini
+!.gemini/AGENTS.md
+!.gemini/antigravity-cli
+!.gemini/antigravity-cli/settings.json
+!.gemini/config
+!.gemini/config/skills.json
+!.gemini/config/mcp_config.json
+!.gemini/config/hooks.json
+
 # Machine keys are provisioned directly, never committed or synced.
 .ssh/id_*
 
