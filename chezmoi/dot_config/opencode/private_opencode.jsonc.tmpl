@@ -22,6 +22,18 @@
         "command": ["1password-mcp"]
       }
 {{- end }}
+{{- $alive2 := joinPath .chezmoi.homeDir "code/llvm-dev/bin/alive-mcp" }}
+{{- if stat $alive2 }},
+      // Alive2 and Compiler Explorer for LLVM work, on hosts with llvm-dev.
+      "alive2": {
+        "type": "local",
+        "command": ["{{ $alive2 }}"]
+      },
+      "godbolt": {
+        "type": "remote",
+        "url": "https://godbolt.org/mcp"
+      }
+{{- end }}
     }
   }
 }

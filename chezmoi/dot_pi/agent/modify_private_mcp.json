@@ -1,6 +1,7 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Own the Executor and Radius entries, and on macOS the 1Password entry,
-      whose server runs in 1Password's desktop app; Pi's toggles, per-tool
+{{- /* Own the Executor and Radius entries, on macOS the 1Password entry,
+      whose server runs in 1Password's desktop app, and with llvm-dev the
+      Alive2 and Compiler Explorer entries; Pi's toggles, per-tool
       restrictions, and other servers stay as Pi wrote them.
       Manual: on each host, sign in with `/login radius` in Pi; over SSH, choose
       the device code. */ -}}
@@ -14,6 +15,12 @@
 {{- $servers := dict "executor" $executor "radius" $radius -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $_ := set $servers "1password" (dict "command" "1password-mcp") -}}
+{{- end -}}
+{{- /* Alive2 and Compiler Explorer for LLVM work, on hosts with llvm-dev. */ -}}
+{{- $alive2 := joinPath .chezmoi.homeDir "code/llvm-dev/bin/alive-mcp" -}}
+{{- if stat $alive2 -}}
+{{-   $_ := set $servers "alive2" (dict "command" $alive2 "timeout" 900 "description" "Prove or refute LLVM IR transformations with Alive2") -}}
+{{-   $_ := set $servers "godbolt" (dict "url" "https://godbolt.org/mcp" "description" "Compile with upstream trunk compilers on Compiler Explorer") -}}
 {{- end -}}
 {{- $merged := mustMergeOverwrite (deepCopy $current) (dict "mcpServers" $servers) -}}
 {{- if eq ($current | toJson) ($merged | toJson) -}}

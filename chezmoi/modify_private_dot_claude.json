@@ -1,7 +1,8 @@
 #!/bin/sh
 # ~/.claude.json is Claude Code's own state file. Own only the Executor MCP
-# entry: jq keeps every other key, its order, and number precision, and the
-# file is returned untouched when the entry already matches.
+# entry, and on hosts with llvm-dev the Alive2 and Compiler Explorer entries:
+# jq keeps every other key, its order, and number precision, and the file is
+# returned untouched when the entries already match.
 set -eu
 current=$(mktemp)
 trap 'rm -f "$current"' EXIT
@@ -12,10 +13,21 @@ if [ ! -x "$jq" ]; then
   exit 0
 fi
 [ -s "$current" ] || printf '{}' >"$current"
-entry='{type: "stdio", command: $command, args: ["mcp"]}'
-command="$HOME/.local/bin/executor-token"
-if "$jq" -e --arg command "$command" ".mcpServers.executor == $entry" "$current" >/dev/null; then
+alive2="$HOME/code/llvm-dev/bin/alive-mcp"
+# jq, not the shell, expands the $names in these filters.
+# shellcheck disable=SC2016
+servers='{executor: {type: "stdio", command: $executor, args: ["mcp"]}}'
+if [ -x "$alive2" ]; then
+  # shellcheck disable=SC2016
+  servers="$servers"' + {alive2: {type: "stdio", command: $alive2, args: []},
+    godbolt: {type: "http", url: "https://godbolt.org/mcp"}}'
+fi
+filter="($servers) as \$owned"
+if "$jq" -e --arg executor "$HOME/.local/bin/executor-token" --arg alive2 "$alive2" \
+  "$filter | (.mcpServers // {}) as \$s | all(\$owned | keys[]; \$s[.] == \$owned[.])" \
+  "$current" >/dev/null; then
   cat "$current"
 else
-  "$jq" --arg command "$command" ".mcpServers.executor = $entry" "$current"
+  "$jq" --arg executor "$HOME/.local/bin/executor-token" --arg alive2 "$alive2" \
+    "$filter | .mcpServers = ((.mcpServers // {}) + \$owned)" "$current"
 fi
