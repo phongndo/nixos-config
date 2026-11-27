@@ -26,6 +26,9 @@ node = "26"
 "github:phongndo/mark" = "latest"
 "github:phongndo/hz" = "latest"
 "github:phongndo/frame" = "latest"
+# Manual: on each host, run `mise exec -- patchr install` once. It links
+# ~/.local/bin/patchr to this install, so upgrades reach every harness.
+"github:phongndo/patch" = "latest"
 {{ if eq .chezmoi.os "darwin" -}}
 "github:phongndo/leetvim" = "latest"
 {{ end -}}

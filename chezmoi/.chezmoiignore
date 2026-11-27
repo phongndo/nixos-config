@@ -62,6 +62,9 @@ web-telemetry.jsonl
 # Rex installs and updates its own skill in the shared skill folder.
 .agents/skills/rex
 
+# `patchr install` writes and updates its own skill in the shared skill folder.
+.agents/skills/patch
+
 # Antigravity keeps conversations, credentials, logs and app state under .gemini.
 .gemini/**
 !.gemini
